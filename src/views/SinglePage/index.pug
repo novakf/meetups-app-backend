@@ -1,0 +1,26 @@
+doctype html
+html(lang="en")
+  head 
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title #{title}
+    style
+      include styles.scss
+  body
+    a.back(href="/") <  К списку митапов
+    div.meetup
+
+      div.banner
+        div.bannerText
+          div.title #{title}
+          div.date #{date}
+          if status !== "завершен"
+            a.register(href="" class="link") Регистрация
+          else 
+            div.link Регистрация закрыта
+        div.imageContainer
+          img(class="image", src=preview, alt="img")
+
+      div.content 
+        div.description #{description}
+      

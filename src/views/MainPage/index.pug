@@ -1,0 +1,34 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title BaumanMeetups
+    style 
+      include main.scss
+  body
+    form.form(role='form' method='GET' action='/find')
+      input.form-input(type='text' placeholder='Статус мероприятия' name='status')
+      button.form-button(type="submit") Поиск
+
+    ul.cards
+      each meetup in meetups
+        
+        div.card
+          a.link(href=meetup.id)
+            div.imgContainer
+              if meetup.status === "завершен"
+                img.greyPreview(src=meetup.preview, alt="preview")
+              else
+                img.preview(src=meetup.preview, alt="preview")
+            div.content
+              div.title #{meetup.title}
+              div.info #{meetup.place}
+              div.info #{meetup.date}
+            div.action
+              if meetup.status === "завершен"
+                div.closed Регистрация закрыта
+              else
+                a.register(href=meetup.id) Зарегистрироваться
+
