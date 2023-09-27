@@ -1,0 +1,22 @@
+doctype html
+html(lang="en")
+  head 
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title #{title}
+    style
+      include styles.scss
+  body
+    a.back(href="/speakers") <  К списку спикеров
+    div.speaker
+      div.banner
+        div.bannerText
+          div.name #{name}
+          div.organization #{organization}
+          a.register(href="/meetups/"+meetup_id class="link") #{meetup}
+        div.imageContainer
+          img(class="image", src=avatar_img, alt="img")
+
+      div.content 
+        div.description #{description}
+      

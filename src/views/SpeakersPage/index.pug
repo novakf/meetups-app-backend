@@ -1,0 +1,23 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title BaumanMeetups
+    style 
+      include main.scss
+  body
+    form.form(role='form' method='GET' action='/speakers')
+      input.form-input(type='text' placeholder='Поиск по конференциям' name='meetupTitle' value=searchTitle)
+      button.form-button(type="submit") Поиск 
+    ul.cards
+      each speaker in speakers
+        div.card
+          a.link(href='/speakers/' + speaker.id)
+            div.imgContainer
+              img.avatar(src=speaker.avatar_img, alt="preview")
+            div.content
+              div.name #{speaker.name}
+              div.info #{speaker.organization}
+              div.meetupTitle #{speaker.meetup}
