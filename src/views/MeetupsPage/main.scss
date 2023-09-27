@@ -17,14 +17,12 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 40px;
-  border-radius: 0px;
   background: #fff;
   height: 420px;
   width: 360px;
   border-radius: 30px;
   transition: transform .4s ease-out;
   &:hover {
-    /* shadow */
     transform: scale(1.03);
   }
 }
