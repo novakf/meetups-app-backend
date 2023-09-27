@@ -5,29 +5,21 @@ import { Request } from 'express';
 
 @Controller()
 export class AppController {
-  @Get()
+  @Get('')
   @Render('MainPage')
-  index() {
-    let meetups = data;
-    return { meetups };
-  }
-
-  @Get('/find')
-  @Render('MainPage')
-  getByStatus(@Req() request: Request) {
+  getByStatus(@Req() request?: Request) {
+    if (!request.query.title) {
+      let meetups = data;
+      return {meetups};
+    }
     let filteredMeetups = [];
+    let searchTitle = request.query.title.toString()
     data.forEach(
       (meetup) =>
-        meetup.status === request.query.status && filteredMeetups.push(meetup),
+        meetup.title.toLowerCase().includes(searchTitle.toLowerCase()) && filteredMeetups.push(meetup),
     );
     let meetups = filteredMeetups;
-    return { meetups };
-  }
-
-  @Get('create')
-  @Render('CreateMeetup')
-  getForm(): void {
-    return;
+    return { meetups, searchTitle };
   }
 
   @Get(':id')
@@ -36,11 +28,4 @@ export class AppController {
     return data.find((meetup) => meetup.id === id);
   }
 
-  @Post('meetups')
-  @Redirect('/')
-  create(@Body() body: any): void {
-    const id = data.length + 1;
-    body[id] = id;
-    data.push(body);
-  }
 }

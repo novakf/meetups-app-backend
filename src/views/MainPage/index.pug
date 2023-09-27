@@ -8,10 +8,9 @@ html(lang="en")
     style 
       include main.scss
   body
-    form.form(role='form' method='GET' action='/find')
-      input.form-input(type='text' placeholder='Статус мероприятия' name='status')
-      button.form-button(type="submit") Поиск
-
+    form.form(role='form' method='GET' action='/')
+      input.form-input(type='text' placeholder='Поиск по названию' name='title' value=searchTitle)
+      button.form-button(type="submit") Поиск 
     ul.cards
       each meetup in meetups
         
