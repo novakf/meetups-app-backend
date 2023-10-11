@@ -8,19 +8,19 @@ export class SpeakersController {
   @Get('')
   @Render('SpeakersPage')
   getByStatus(@Req() request?: Request) {
-    if (!request.query.meetupTitle) {
+    if (!request.query.company) {
       let speakers = data;
       return { speakers };
     }
     let filteredSpeakers = [];
-    let searchTitle = request.query.meetupTitle.toString();
+    let company = request.query.company.toString();
     data.forEach(
       (speaker) =>
-        speaker.meetup.toLowerCase().includes(searchTitle.toLowerCase()) &&
+        speaker.organization?.toLowerCase().includes(company.toLowerCase()) &&
         filteredSpeakers.push(speaker),
     );
     let speakers = filteredSpeakers;
-    return { speakers, searchTitle };
+    return { speakers, company };
   }
 
   @Get(':id')

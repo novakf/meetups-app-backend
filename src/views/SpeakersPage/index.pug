@@ -9,7 +9,7 @@ html(lang="en")
       include main.scss
   body
     form.form(role='form' method='GET' action='/speakers')
-      input.form-input(type='text' placeholder='Поиск по конференциям' name='meetupTitle' value=searchTitle)
+      input.form-input(type='text' placeholder='Введите название компании' name='company' value=company)
       button.form-button(type="submit") Поиск 
     ul.cards
       each speaker in speakers
