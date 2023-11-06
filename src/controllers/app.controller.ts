@@ -1,31 +1,21 @@
-import { Body, Controller, Get, Req } from '@nestjs/common';
-import { data } from '../meetups';
+import { Controller, Get, Req } from '@nestjs/common';
 import { Render, Param, ParseIntPipe } from '@nestjs/common';
 import { Request } from 'express';
+import { AppService } from 'src/services/app.service';
 
 @Controller('/meetups')
 export class AppController {
+  constructor(private appService: AppService) {}
+
   @Get('')
   @Render('MeetupsPage')
-  getByStatus(@Req() request?: Request) {
-    if (!request.query.title) {
-      let meetups = data;
-      return { meetups };
-    }
-    let filteredMeetups = [];
-    let searchTitle = request.query.title.toString();
-    data.forEach(
-      (meetup) =>
-        meetup.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
-        filteredMeetups.push(meetup),
-    );
-    let meetups = filteredMeetups;
-    return { meetups, searchTitle };
+  getByStatus(@Req() request: Request) {
+    return this.appService.getByStatus(request)
   }
 
   @Get(':id')
   @Render('SingleMeetupPage')
   getById(@Param('id', ParseIntPipe) id: number) {
-    return data.find((meetup) => meetup.id === id);
+    return this.appService.getById(id)
   }
 }

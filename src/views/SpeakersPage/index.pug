@@ -16,8 +16,7 @@ html(lang="en")
         div.card
           a.link(href='/speakers/' + speaker.id)
             div.imgContainer
-              img.avatar(src=speaker.avatar_img, alt="preview")
+              img.avatar(src=speaker.avatarImg, alt="preview")
             div.content
               div.name #{speaker.name}
               div.info #{speaker.organization}
-              div.meetupTitle #{speaker.meetup}
