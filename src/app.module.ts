@@ -1,7 +1,4 @@
 import { Module } from '@nestjs/common';
-import { SpeakersController } from './controllers/speaker.controller';
-import { AppController } from './controllers/app.controller';
-import { AppService } from './services/app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { MeetupsModule } from './meetups/meetups.module';
 import { ConfigModule } from '@nestjs/config';
