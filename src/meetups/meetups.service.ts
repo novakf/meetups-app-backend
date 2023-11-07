@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Meetup } from './meetups.model';
 import { InjectModel } from '@nestjs/sequelize';
-import { CreateMeetupDto } from './dto/create-meetup-dto';
+import { CreateMeetupDto } from './dto/create-meetup.dto';
 
 @Injectable()
 export class MeetupsService {

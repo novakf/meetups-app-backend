@@ -1,7 +1,13 @@
-import { Controller, Get, Param, ParseIntPipe, Render, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Render,
+  Req,
+} from '@nestjs/common';
 import { SpeakersService } from './speakers.service';
 import { Request } from 'express';
-import { data } from '../speakers';
 
 @Controller('speakers')
 export class SpeakersController {
@@ -10,24 +16,16 @@ export class SpeakersController {
   @Get('')
   @Render('SpeakersPage')
   async getByStatus(@Req() request?: Request) {
-    let speakers = await this.speakersService.getAllSpeakers();
-    if (!request.query.company) return { speakers };
+    let company = request.query.company?.toString();
 
-    let filteredSpeakers = [];
-    let company = request.query.company.toString();
-    speakers.forEach(
-      (speaker) =>
-        speaker.organization?.toLowerCase().includes(company.toLowerCase()) &&
-        filteredSpeakers.push(speaker),
-    );
-    speakers = filteredSpeakers;
+    let speakers = await this.speakersService.getByOrganization(company);
+
     return { speakers, company };
   }
 
   @Get(':id')
   @Render('SingleSpeakerPage')
-  async getById(@Param('id', ParseIntPipe) id: number) {
-    let speakers = await this.speakersService.getAllSpeakers();
-    return speakers.find((speaker) => speaker.id === id).dataValues;
+  getById(@Param('id', ParseIntPipe) id: number) {
+    return this.speakersService.getById(id);
   }
 }

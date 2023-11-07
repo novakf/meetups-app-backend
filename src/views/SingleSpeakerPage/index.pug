@@ -12,9 +12,9 @@ html(lang="en")
     div.container
       div.banner
         div.avatarContainer
-          img.avatar(src=avatarImg, alt="avatar")
+          img.avatar(src=user.avatarImg, alt="avatar")
         div.mainInfo
-          div.name #{name}
+          div.name #{user.name}
           div.companyName #{organization}
       div.info
         div.about
@@ -23,9 +23,9 @@ html(lang="en")
         div.contacts
           div.contactsContainer
             div.titleSmall Телефон:
-            div.text #{phone}
+            div.text #{user.phone}
             div.titleSmall Почта:
-            div.email #{email}
+            div.email #{user.email}
 
           
 

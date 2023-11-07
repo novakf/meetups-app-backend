@@ -1,5 +1,16 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import {
+  BelongsTo,
+  BelongsToMany,
+  Column,
+  DataType,
+  ForeignKey,
+  Model,
+  Table,
+} from 'sequelize-typescript';
+import { Speaker } from 'src/speakers/speakers.model';
 import { MeetupStatusType } from 'src/types';
+import { MeetupsSpeakers } from './meetups-speakers.model';
+import { User } from 'src/users/users.model';
 
 interface MeetupCreationAttrs {
   id: number;
@@ -19,6 +30,13 @@ export class Meetup extends Model<Meetup, MeetupCreationAttrs> {
   })
   id: number;
 
+  @ForeignKey(() => User)
+  @Column({ type: DataType.INTEGER, allowNull: false })
+  creatorID: number;
+
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  moderatorID: number;
+
   @Column({ type: DataType.STRING, allowNull: false })
   status: MeetupStatusType;
 
@@ -36,4 +54,13 @@ export class Meetup extends Model<Meetup, MeetupCreationAttrs> {
 
   @Column({ type: DataType.STRING, allowNull: true })
   preview: string;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  confirmedAt: string;
+
+  @BelongsTo(() => User)
+  user: User;
+
+  @BelongsToMany(() => Speaker, () => MeetupsSpeakers)
+  speakers: Speaker[];
 }

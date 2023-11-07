@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Render } from '@nestjs/common';
 import { MeetupsService } from './meetups.service';
-import { CreateMeetupDto } from './dto/create-meetup-dto';
+import { CreateMeetupDto } from './dto/create-meetup.dto';
 
 @Controller('meetups')
 export class MeetupsController {
