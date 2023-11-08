@@ -12,7 +12,7 @@ body {
   color: #a1a0a0;
   font-size: 18px;
   &:hover {
-    color: #777777
+    color: #777777;
   }
 }
 
@@ -32,9 +32,9 @@ body {
 
 .avatarContainer {
   display: flex;
-  height:180px;
+  height: 180px;
   width: 180px;
-  overflow:hidden;
+  overflow: hidden;
   border-radius: 50%;
   margin: 0;
 }
@@ -115,3 +115,31 @@ body {
   font-weight: 600;
 }
 
+.deleteBtn {
+  background-color: transparent;
+  border: none;
+  color: #4d4d4d;
+  font-size: 20px;
+  cursor: pointer;
+
+  &:hover {
+    color: red;
+  }
+}
+
+.addBtn {
+  background-color: transparent;
+  border: none;
+  color: #4d4d4d;
+  font-size: 20px;
+  cursor: pointer;
+
+  &:hover {
+    color: green;
+  }
+}
+
+.changeStatusForm {
+  margin-left: auto;
+  margin-bottom: 120px;
+}

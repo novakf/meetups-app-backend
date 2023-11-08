@@ -16,7 +16,10 @@ html(lang="en")
         div.card
           a.link(href='/speakers/' + speaker.id)
             div.imgContainer
-              img.avatar(src=speaker.user.avatarImg, alt="preview")
+              if speaker.status === "неактивный"
+                img.greyAvatar(src=speaker.user.avatarImg, alt="preview")
+              else
+                img.avatar(src=speaker.user.avatarImg, alt="preview")
             div.content
               div.name #{speaker.user.name}
               div.info #{speaker.organization}

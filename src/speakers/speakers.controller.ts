@@ -1,8 +1,13 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  Put,
+  Redirect,
   Render,
   Req,
 } from '@nestjs/common';
@@ -27,5 +32,11 @@ export class SpeakersController {
   @Render('SingleSpeakerPage')
   getById(@Param('id', ParseIntPipe) id: number) {
     return this.speakersService.getById(id);
+  }
+
+  @Post(':id')
+  @Redirect('/speakers')
+  changeStatus(@Param('id', ParseIntPipe) id: number) {
+    return this.speakersService.changeStatus(id);
   }
 }

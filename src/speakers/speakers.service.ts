@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Speaker } from './speakers.model';
 import { CreateSpeakerDto } from './dto/create-speaker.dto';
-import { Op } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import { User } from 'src/users/users.model';
 
 @Injectable()
@@ -16,11 +16,6 @@ export class SpeakersService {
     return speaker;
   }
 
-  async getAllSpeakers() {
-    const speakers = await this.speakerRepository.findAll();
-    return speakers;
-  }
-
   async getByOrganization(org?: string) {
     const speakers = await this.speakerRepository.findAll({
       where: org && {
@@ -31,6 +26,7 @@ export class SpeakersService {
       nest: true,
       raw: true,
       include: User,
+      attributes: { exclude: ['userID'] },
     });
 
     return speakers;
@@ -42,7 +38,17 @@ export class SpeakersService {
       nest: true,
       raw: true,
       include: User,
+      attributes: { exclude: ['userID'] },
     });
+    return speaker;
+  }
+
+  async changeStatus(id: number) {
+    const speaker = await this.speakerRepository.sequelize.query(
+      "UPDATE speakers SET status = CASE WHEN status = 'неактивный' THEN 'активный' ELSE 'неактивный' END WHERE id = $1",
+      { type: QueryTypes.SELECT, bind: [id] },
+    );
+
     return speaker;
   }
 }
