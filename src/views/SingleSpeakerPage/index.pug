@@ -12,15 +12,10 @@ html(lang="en")
     div.container
       div.banner
         div.avatarContainer
-          img.avatar(src=user.avatarImg, alt="avatar")
+          img.avatar(src=avatarImg, alt="avatar")
         div.mainInfo
-          div.name #{user.name}
+          div.name #{name}
           div.companyName #{organization}
-        form.changeStatusForm(role='form' method='POST' action=`/speakers/${user.id}`)
-          if status === "активный"
-            button.deleteBtn(type="submit") Исключить
-          else 
-            button.addBtn(type="submit") Добавить в общий список
       div.info
         div.about
           div.title Обо мне
@@ -28,9 +23,9 @@ html(lang="en")
         div.contacts
           div.contactsContainer
             div.titleSmall Телефон:
-            div.text #{user.phone}
+            div.text #{phone}
             div.titleSmall Почта:
-            div.email #{user.email}
+            div.email #{email}
 
 
 

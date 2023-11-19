@@ -7,7 +7,6 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Meetup } from 'src/meetups/meetups.model';
-import { Speaker } from 'src/speakers/speakers.model';
 
 interface UserCreateAttr {
   id: number;
@@ -15,6 +14,7 @@ interface UserCreateAttr {
   phone: string;
   email: string;
   avatarImg: string;
+  isAdmin: boolean;
 }
 
 @Table({ tableName: 'users', createdAt: false, updatedAt: false })
@@ -39,8 +39,8 @@ export class User extends Model<User, UserCreateAttr> {
   @Column({ type: DataType.STRING, allowNull: true })
   avatarImg: string;
 
-  @HasOne(() => Speaker)
-  speaker: Speaker
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
+  isAdmin: boolean;
 
   @HasMany(() => Meetup)
   meetups: Meetup[];

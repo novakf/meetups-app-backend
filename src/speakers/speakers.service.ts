@@ -18,14 +18,19 @@ export class SpeakersService {
 
   async getByOrganization(org?: string) {
     const speakers = await this.speakerRepository.findAll({
-      where: org && {
-        organization: {
-          [Op.iLike]: `%${org}%`,
-        },
-      },
+      where: org
+        ? {
+            organization: {
+              [Op.iLike]: `%${org}%`,
+            },
+            status: 'активный',
+          }
+        : {
+            status: 'активный',
+          },
       nest: true,
       raw: true,
-      include: User,
+      order: ['id'],
       attributes: { exclude: ['userID'] },
     });
 
@@ -37,7 +42,6 @@ export class SpeakersService {
       where: { id },
       nest: true,
       raw: true,
-      include: User,
       attributes: { exclude: ['userID'] },
     });
     return speaker;

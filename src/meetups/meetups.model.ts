@@ -40,13 +40,13 @@ export class Meetup extends Model<Meetup, MeetupCreationAttrs> {
   @Column({ type: DataType.STRING, allowNull: false })
   status: MeetupStatusType;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: true })
   date: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: true })
   place: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: true })
   title: string;
 
   @Column({ type: DataType.STRING, allowNull: true })

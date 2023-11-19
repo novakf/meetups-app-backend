@@ -11,7 +11,7 @@ import { User } from 'src/users/users.model';
   controllers: [SpeakersController],
   providers: [SpeakersService],
   imports: [
-    SequelizeModule.forFeature([Speaker, Meetup, MeetupsSpeakers, User])
+    SequelizeModule.forFeature([Speaker, Meetup, MeetupsSpeakers])
   ]
 })
 export class SpeakersModule {}

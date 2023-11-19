@@ -3,7 +3,7 @@ body {
   padding: 0 50px;
   margin-top: 50px;
   margin: 50px auto;
-  max-width: 1000px;
+  max-width: 1030px;
   font-family: 'Roboto', sans-serif;
 }
 
@@ -113,30 +113,6 @@ body {
   margin-bottom: 4px;
   color: #535c65;
   font-weight: 600;
-}
-
-.deleteBtn {
-  background-color: transparent;
-  border: none;
-  color: #4d4d4d;
-  font-size: 20px;
-  cursor: pointer;
-
-  &:hover {
-    color: red;
-  }
-}
-
-.addBtn {
-  background-color: transparent;
-  border: none;
-  color: #4d4d4d;
-  font-size: 20px;
-  cursor: pointer;
-
-  &:hover {
-    color: green;
-  }
 }
 
 .changeStatusForm {

@@ -1,19 +1,20 @@
 import {
-  BelongsTo,
   BelongsToMany,
   Column,
   DataType,
-  ForeignKey,
   Model,
   Table,
 } from 'sequelize-typescript';
 import { MeetupsSpeakers } from 'src/meetups/meetups-speakers.model';
 import { Meetup } from 'src/meetups/meetups.model';
 import { SpeakerStatusType } from 'src/types';
-import { User } from 'src/users/users.model';
 
 interface SpeakerCreateAttr {
   id: number;
+  name: string;
+  phone: string;
+  email: string;
+  avatarImg: string;
   status: SpeakerStatusType;
   organization: string;
   description: string;
@@ -29,9 +30,17 @@ export class Speaker extends Model<Speaker, SpeakerCreateAttr> {
   })
   id: number;
 
-  @ForeignKey(() => User)
-  @Column({ type: DataType.INTEGER, allowNull: false, unique: true })
-  userID: number;
+  @Column({ type: DataType.STRING, allowNull: false })
+  name: string;
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  phone: string;
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  email: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  avatarImg: string;
 
   @Column({ type: DataType.STRING, allowNull: false })
   status: SpeakerStatusType;
@@ -41,12 +50,6 @@ export class Speaker extends Model<Speaker, SpeakerCreateAttr> {
 
   @Column({ type: DataType.STRING, allowNull: false })
   description: string;
-
-  @BelongsTo(() => User, {
-    onDelete: 'RESTRICT',
-    onUpdate: 'RESTRICT',
-  })
-  user: User;
 
   @BelongsToMany(() => Meetup, () => MeetupsSpeakers)
   meetups: Meetup[];

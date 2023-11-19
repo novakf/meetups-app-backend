@@ -17,9 +17,14 @@ html(lang="en")
           a.link(href='/speakers/' + speaker.id)
             div.imgContainer
               if speaker.status === "неактивный"
-                img.greyAvatar(src=speaker.user.avatarImg, alt="preview")
+                img.greyAvatar(src=speaker.avatarImg)
               else
-                img.avatar(src=speaker.user.avatarImg, alt="preview")
+                img.avatar(src=speaker.avatarImg)
             div.content
-              div.name #{speaker.user.name}
+              div.name #{speaker.name}
               div.info #{speaker.organization}
+              form(role='form' method='POST' action=`/speakers/${speaker.id}`)
+                if speaker.status === "активный"
+                  button.deleteBtn(type="submit") Исключить
+                else 
+                  button.addBtn(type="submit") Активизировать

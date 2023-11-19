@@ -22,4 +22,16 @@ export class MeetupsSpeakers extends Model<MeetupsSpeakers> {
   @ForeignKey(() => Speaker)
   @Column({ type: DataType.INTEGER, primaryKey: true })
   speakerId: number;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  startsAt: string;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  endsAt: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  reportTheme: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  reportDescription: string;
 }
