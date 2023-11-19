@@ -20,7 +20,7 @@ interface MeetupCreationAttrs {
   title: string;
 }
 
-@Table({ tableName: 'meetups' })
+@Table({ tableName: 'meetups', updatedAt: false })
 export class Meetup extends Model<Meetup, MeetupCreationAttrs> {
   @Column({
     type: DataType.INTEGER,
@@ -54,6 +54,9 @@ export class Meetup extends Model<Meetup, MeetupCreationAttrs> {
 
   @Column({ type: DataType.STRING, allowNull: true })
   preview: string;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  updatedAt: string;
 
   @Column({ type: DataType.DATE, allowNull: true })
   confirmedAt: string;
