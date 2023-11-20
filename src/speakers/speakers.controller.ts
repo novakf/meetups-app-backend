@@ -1,22 +1,26 @@
 import {
   Controller,
-  Delete,
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
-  Put,
   Redirect,
   Render,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { SpeakersService } from './speakers.service';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MinioService } from 'src/minio/minio.service';
 
 @Controller('speakers')
 export class SpeakersController {
-  constructor(private speakersService: SpeakersService) {}
+  constructor(
+    private speakersService: SpeakersService,
+    private readonly minioService: MinioService,
+  ) {}
 
   @Get('')
   @Render('SpeakersPage')
@@ -38,5 +42,14 @@ export class SpeakersController {
   @Redirect('/speakers')
   changeStatus(@Param('id', ParseIntPipe) id: number) {
     return this.speakersService.changeStatus(id);
+  }
+
+  @Post()
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    console.log('UP')
+    await this.minioService.createBucketIfNotExists();
+    const fileName = this.minioService.uploadFile(file);
+    return fileName;
   }
 }
