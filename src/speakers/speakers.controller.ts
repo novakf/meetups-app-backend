@@ -27,7 +27,7 @@ export class SpeakersController {
   ) {}
 
   @Get('')
-  //@Render('SpeakersPage')
+  @Render('SpeakersPage')
   async getByStatus(@Req() request?: Request) {
     const userID = 1;
 
@@ -38,7 +38,7 @@ export class SpeakersController {
       company,
     );
 
-    return { speakers, company };
+    return { ...speakers, company };
   }
 
   @Get(':id')

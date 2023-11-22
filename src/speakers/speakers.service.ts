@@ -56,7 +56,6 @@ export class SpeakersService {
             status: 'активный',
           },
       nest: true,
-      raw: true,
       order: ['id'],
       attributes: { exclude: ['userID'] },
     });
@@ -67,8 +66,6 @@ export class SpeakersService {
         status: 'черновик',
       },
     });
-
-    if (!meetup) return speakers;
 
     return { meetup, speakers };
   }

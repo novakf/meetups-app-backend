@@ -36,12 +36,12 @@ export class MeetupsService {
               [Op.not]: { status: 'черновик' || 'отменен' },
               [Op.and]: [
                 sequelize.where(
-                  sequelize.fn('date', sequelize.col('date')),
+                  sequelize.fn('date', sequelize.col('createdAt')),
                   '>=',
                   startDate,
                 ),
                 sequelize.where(
-                  sequelize.fn('date', sequelize.col('date')),
+                  sequelize.fn('date', sequelize.col('createdAt')),
                   '<=',
                   endDate,
                 ),
@@ -53,12 +53,12 @@ export class MeetupsService {
               [Op.not]: { status: 'черновик' || 'отменен' },
               [Op.and]: [
                 sequelize.where(
-                  sequelize.fn('date', sequelize.col('date')),
+                  sequelize.fn('date', sequelize.col('createdAt')),
                   '>=',
                   startDate,
                 ),
                 sequelize.where(
-                  sequelize.fn('date', sequelize.col('date')),
+                  sequelize.fn('date', sequelize.col('createdAt')),
                   '<=',
                   endDate,
                 ),
@@ -67,12 +67,7 @@ export class MeetupsService {
           : {
               [Op.not]: { status: 'черновик' || 'отменен' },
             },
-      include: {
-        model: Speaker,
-        through: {
-          attributes: [],
-        },
-      },
+      include: Speaker,
     });
 
     return meetups;
