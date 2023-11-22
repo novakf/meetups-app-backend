@@ -23,8 +23,10 @@ export class MeetupsController {
   @Get()
   getAll(@Req() request?: Request) {
     let status = request.query.status?.toString();
+    let startDate = request.query.startDate?.toString();
+    let endDate = request.query.endDate?.toString();
 
-    return this.meetupsService.getAllMeetups(status);
+    return this.meetupsService.getAllMeetups(status, startDate, endDate);
   }
 
   @Get(':id')

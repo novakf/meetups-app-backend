@@ -43,6 +43,7 @@ export class MinioService {
   }
 
   async deleteFile(fileName: string) {
+    console.log(fileName)
     await this.minioClient.removeObject(this.bucketName, fileName)
   }
 }

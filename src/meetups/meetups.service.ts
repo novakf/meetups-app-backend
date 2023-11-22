@@ -8,6 +8,7 @@ import { MeetupStatusType } from 'src/types';
 import { Sequelize } from 'sequelize-typescript';
 import { MeetupsSpeakers } from './meetups-speakers.model';
 import { CreateMeetupSpeakerDto } from './dto/create-meetup-speaker.dto';
+import sequelize from 'sequelize';
 
 @Injectable()
 export class MeetupsService {
@@ -22,16 +23,50 @@ export class MeetupsService {
     return meetup;
   }
 
-  async getAllMeetups(status?: string) {
+  async getAllMeetups(status?: string, startDate?: string, endDate?: string) {
     const meetups = await this.meetupRepository.findAll({
-      where: status
-        ? {
-            [Op.not]: { status: 'черновик' || 'отменен' },
-            status: status,
-          }
-        : {
-            [Op.not]: { status: 'черновик' || 'отменен' },
-          },
+      where:
+        status && !(startDate && endDate)
+          ? {
+              [Op.not]: { status: 'черновик' || 'отменен' },
+              status: status,
+            }
+          : startDate && endDate && !status
+          ? {
+              [Op.not]: { status: 'черновик' || 'отменен' },
+              [Op.and]: [
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('date')),
+                  '>=',
+                  startDate,
+                ),
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('date')),
+                  '<=',
+                  endDate,
+                ),
+              ],
+            }
+          : status && startDate && endDate
+          ? {
+              status: status,
+              [Op.not]: { status: 'черновик' || 'отменен' },
+              [Op.and]: [
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('date')),
+                  '>=',
+                  startDate,
+                ),
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('date')),
+                  '<=',
+                  endDate,
+                ),
+              ],
+            }
+          : {
+              [Op.not]: { status: 'черновик' || 'отменен' },
+            },
       include: {
         model: Speaker,
         through: {
@@ -109,8 +144,6 @@ export class MeetupsService {
       return true;
     });
 
-    if (!condition) return 'Заполните все поля спикера';
-
     if (!currentMeetup) return 'Черновик не найден';
 
     if (
@@ -120,6 +153,8 @@ export class MeetupsService {
       !currentMeetup.preview
     )
       return 'Заполните все поля заявки на митап прежде чем формировать ее';
+
+    if (!condition) return 'Заполните все поля спикера';
 
     const meetup = await this.meetupRepository.update(
       {
@@ -270,6 +305,10 @@ export class MeetupsService {
       },
     });
 
-    return this.meetupsSpeakersRepository.findAll();
+    return this.meetupsSpeakersRepository.findAll({
+      where: {
+        meetupId: meetup.id,
+      },
+    });
   }
 }

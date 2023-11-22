@@ -27,11 +27,16 @@ export class SpeakersController {
   ) {}
 
   @Get('')
-  @Render('SpeakersPage')
+  //@Render('SpeakersPage')
   async getByStatus(@Req() request?: Request) {
+    const userID = 1;
+
     let company = request.query.company?.toString();
 
-    let speakers = await this.speakersService.getByOrganization(company);
+    let speakers = await this.speakersService.getByOrganization(
+      userID,
+      company,
+    );
 
     return { speakers, company };
   }
@@ -42,11 +47,11 @@ export class SpeakersController {
     return this.speakersService.getById(id);
   }
 
-//  @Post(':id')
-//  @Redirect('/speakers')
-//  changeStatus(@Param('id', ParseIntPipe) id: number) {
-//    return this.speakersService.changeStatus(id);
-//  }
+  //  @Post(':id')
+  //  @Redirect('/speakers')
+  //  changeStatus(@Param('id', ParseIntPipe) id: number) {
+  //    return this.speakersService.changeStatus(id);
+  //  }
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
@@ -58,15 +63,35 @@ export class SpeakersController {
 
     const speaker = await this.speakersService.createSpeaker(
       speakerDto,
-      file.originalname,
+      file && file.originalname,
     );
 
+    if (file)
+      await this.minioService.uploadFile(`/speakers/${speaker.id}/`, file);
+
+    return speaker;
+  }
+
+  @Put('/image/:id')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const currentSpeaker = await this.getById(id);
+
+    await this.minioService.deleteFile(
+      currentSpeaker.avatarImg.split('meetups-app')[1],
+    );
+
+    await this.speakersService.uploadAvatar(id, file.originalname);
+
     const fileName = await this.minioService.uploadFile(
-      `/speakers/${speaker.id}/`,
+      `/speakers/${id}`,
       file,
     );
 
-    return speaker;
+    return `Изображение изменено на ${fileName}`;
   }
 
   @Post(':id')
@@ -76,8 +101,17 @@ export class SpeakersController {
   }
 
   @Delete(':id')
-  delete(@Param('id', ParseIntPipe) id: number) {
-    return this.speakersService.deleteSpeaker(id);
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    const userID = 1;
+
+    const speaker = await this.getById(id);
+
+    if (speaker)
+      await this.minioService.deleteFile(
+        speaker.avatarImg.split('meetups-app')[1],
+      );
+
+    return this.speakersService.deleteSpeaker(userID, id);
   }
 
   @Put(':id')

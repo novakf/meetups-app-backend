@@ -16,15 +16,34 @@ export class SpeakersService {
     @InjectModel(Meetup) private meetupRepository: typeof Meetup,
   ) {}
 
-  async createSpeaker(dto: CreateSpeakerDto, fileName: string) {
+  async createSpeaker(dto: CreateSpeakerDto, fileName?: string) {
     const speaker = await this.speakerRepository.create(dto);
-    await speaker.update({
-      avatarImg: `http://localhost:9000/meetups-app/speakers/${speaker.id}/${fileName}`,
-    });
+    if (fileName)
+      await speaker.update({
+        avatarImg: `http://localhost:9000/meetups-app/speakers/${speaker.id}/${fileName}`,
+      });
     return speaker;
   }
 
-  async getByOrganization(org?: string) {
+  async uploadAvatar(id: number, fileName: string) {
+    const result = await this.speakerRepository.update(
+      {
+        avatarImg: `http://localhost:9000/meetups-app/speakers/${id}/${fileName}`,
+      },
+      {
+        where: {
+          id: id,
+        },
+      },
+    );
+    return this.speakerRepository.findOne({
+      where: {
+        id: id,
+      },
+    });
+  }
+
+  async getByOrganization(userID: number, org?: string) {
     const speakers = await this.speakerRepository.findAll({
       where: org
         ? {
@@ -42,7 +61,16 @@ export class SpeakersService {
       attributes: { exclude: ['userID'] },
     });
 
-    return speakers;
+    const meetup = await this.meetupRepository.findOne({
+      where: {
+        creatorID: userID,
+        status: 'черновик',
+      },
+    });
+
+    if (!meetup) return speakers;
+
+    return { meetup, speakers };
   }
 
   async getById(id: number) {
@@ -55,16 +83,17 @@ export class SpeakersService {
     return speaker;
   }
 
-  async deleteSpeaker(id: number) {
+  async deleteSpeaker(userID: number, id: number) {
     const result = await this.speakerRepository.destroy({
       where: {
         id: id,
       },
     });
 
-    return result === 1
-      ? `Спикер с id=${id} успешно удален`
-      : `Не удалось удалить спикера с id=${id} / спикер с id=${id} не найден`;
+    if (result === 0)
+      return `Не удалось удалить спикера с id=${id} / спикер с id=${id} не найден`;
+
+    return this.getByOrganization(userID)
   }
 
   async addSpeakerToMeetup(id: number, userID: number) {
@@ -80,6 +109,15 @@ export class SpeakersService {
         creatorID: userID,
         status: 'черновик',
       });
+
+    const currentRecord = await this.meetupsSpeakersRepository.findOne({
+      where: {
+        meetupId: meetup.id,
+        speakerId: id,
+      },
+    });
+
+    if (currentRecord) return 'Спикер уже добавлен в заявку';
 
     await this.meetupsSpeakersRepository.create({
       meetupId: meetup.id,
