@@ -25,8 +25,8 @@ export class MinioService {
     }
   }
 
-  async uploadFile(file: Express.Multer.File) {
-    const fileName = `${Date.now()}-${file.originalname}`;
+  async uploadFile(folder: string, file: Express.Multer.File) {
+    const fileName = `${folder}/${file.originalname}`;
 
     await this.minioClient.putObject(
       this.bucketName,
@@ -35,7 +35,7 @@ export class MinioService {
       file.size,
     );
 
-    return fileName;
+    return 'http://localhost:9000/meetups-app' + fileName;
   }
 
   async getFileUrl(fileName: string) {

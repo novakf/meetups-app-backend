@@ -14,10 +14,16 @@ import { User } from 'src/users/users.model';
 
 interface MeetupCreationAttrs {
   id: number;
+  creatorID: number;
+  moderatorID: number;
   status: MeetupStatusType;
   date: string;
   place: string;
   title: string;
+  description: string;
+  preview: string;
+  updatedAt: string;
+  confirmedAt: string;
 }
 
 @Table({ tableName: 'meetups', updatedAt: false })

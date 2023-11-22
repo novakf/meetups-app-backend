@@ -39,10 +39,14 @@ export class Speaker extends Model<Speaker, SpeakerCreateAttr> {
   @Column({ type: DataType.STRING, allowNull: false })
   email: string;
 
-  @Column({ type: DataType.STRING, allowNull: true })
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    defaultValue: 'http://localhost:9000/meetups-app/speakers/default/defaultAvatar.jpg',
+  })
   avatarImg: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: false, defaultValue: 'активный' })
   status: SpeakerStatusType;
 
   @Column({ type: DataType.STRING, allowNull: true })
