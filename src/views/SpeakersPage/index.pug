@@ -9,8 +9,8 @@ html(lang="en")
       include main.scss
   body
     form.form(role='form' method='GET' action='/speakers')
-      input.form-input(type='text' placeholder='Поиск по конференциям' name='meetupTitle' value=searchTitle)
-      button.form-button(type="submit") Поиск 
+      input.form-input(type='text' placeholder='Поиск по компании' name='company' value=searchTitle)
+      button.form-button(type="submit") Поиск
     ul.cards
       each speaker in speakers
         div.card
@@ -20,4 +20,3 @@ html(lang="en")
             div.content
               div.name #{speaker.name}
               div.info #{speaker.organization}
-              div.meetupTitle #{speaker.meetup}
