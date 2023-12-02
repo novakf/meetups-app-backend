@@ -67,8 +67,11 @@ export class Meetup extends Model<Meetup, MeetupCreationAttrs> {
   @Column({ type: DataType.DATE, allowNull: true })
   confirmedAt: string;
 
-  @BelongsTo(() => User)
-  user: User;
+  @BelongsTo(() => User, {foreignKey: "creatorID", as: "creatorInfo"})
+  creator: User;
+
+  @BelongsTo(() => User, {foreignKey: "moderatorID", as: "moderatorInfo"})
+  moderator: User;
 
   @BelongsToMany(() => Speaker, () => MeetupsSpeakers)
   speakers: Speaker[];

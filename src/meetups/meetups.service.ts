@@ -9,6 +9,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { MeetupsSpeakers } from './meetups-speakers.model';
 import { CreateMeetupSpeakerDto } from './dto/create-meetup-speaker.dto';
 import sequelize from 'sequelize';
+import { User } from 'src/users/users.model';
 
 @Injectable()
 export class MeetupsService {
@@ -67,7 +68,7 @@ export class MeetupsService {
           : {
               [Op.not]: { status: 'черновик' || 'отменен' },
             },
-      include: Speaker,
+      include: [Speaker, {model: User, as: "creatorInfo", attributes: ["name"]}, {model: User, as: "moderatorInfo", attributes: ["name"]}],
     });
 
     return meetups;

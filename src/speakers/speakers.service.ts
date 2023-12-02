@@ -90,7 +90,7 @@ export class SpeakersService {
     if (result === 0)
       return `Не удалось удалить спикера с id=${id} / спикер с id=${id} не найден`;
 
-    return this.getByOrganization(userID)
+    return this.getByOrganization(userID);
   }
 
   async addSpeakerToMeetup(id: number, userID: number) {
@@ -125,12 +125,16 @@ export class SpeakersService {
       where: {
         id: meetup.id,
       },
-      include: {
-        model: Speaker,
-        through: {
-          attributes: [],
+      include: [
+        {
+          model: Speaker,
+          through: {
+            attributes: [],
+          },
         },
-      },
+        { model: User, as: 'creatorInfo', attributes: ['name'] },
+        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+      ],
     });
 
     return resultMeetup;
