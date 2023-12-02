@@ -68,7 +68,11 @@ export class MeetupsService {
           : {
               [Op.not]: { status: 'черновик' || 'отменен' },
             },
-      include: [Speaker, {model: User, as: "creatorInfo", attributes: ["name"]}, {model: User, as: "moderatorInfo", attributes: ["name"]}],
+      include: [
+        Speaker,
+        { model: User, as: 'creatorInfo', attributes: ['name'] },
+        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+      ],
     });
 
     return meetups;
@@ -79,12 +83,16 @@ export class MeetupsService {
       where: {
         id: id,
       },
-      include: {
-        model: Speaker,
-        through: {
-          attributes: [],
+      include: [
+        {
+          model: Speaker,
+          through: {
+            attributes: [],
+          },
         },
-      },
+        { model: User, as: 'creatorInfo', attributes: ['name'] },
+        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+      ],
     });
 
     if (!meetup) return 'Митап не найден';
@@ -107,6 +115,16 @@ export class MeetupsService {
         creatorID: userID,
         status: 'черновик',
       },
+      include: [
+        {
+          model: Speaker,
+          through: {
+            attributes: [],
+          },
+        },
+        { model: User, as: 'creatorInfo', attributes: ['name'] },
+        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+      ],
     });
 
     //return result[0] === 1 ? `Информация о митапе с id=${id} изменена` : `Не удалось изменить информацию о митапе с id=${id}`;
@@ -170,6 +188,16 @@ export class MeetupsService {
       where: {
         id: currentMeetup.id,
       },
+      include: [
+        {
+          model: Speaker,
+          through: {
+            attributes: [],
+          },
+        },
+        { model: User, as: 'creatorInfo', attributes: ['name'] },
+        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+      ],
     });
   }
 
@@ -216,6 +244,16 @@ export class MeetupsService {
       where: {
         id: id,
       },
+      include: [
+        {
+          model: Speaker,
+          through: {
+            attributes: [],
+          },
+        },
+        { model: User, as: 'creatorInfo', attributes: ['name'] },
+        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+      ],
     });
   }
 
@@ -233,12 +271,16 @@ export class MeetupsService {
       where: {
         [Op.not]: { status: 'черновик' || 'отменен' },
       },
-      include: {
-        model: Speaker,
-        through: {
-          attributes: [],
+      include: [
+        {
+          model: Speaker,
+          through: {
+            attributes: [],
+          },
         },
-      },
+        { model: User, as: 'creatorInfo', attributes: ['name'] },
+        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+      ],
     });
   }
 
@@ -266,12 +308,16 @@ export class MeetupsService {
         creatorID: userID,
         status: 'черновик',
       },
-      include: {
-        model: Speaker,
-        through: {
-          attributes: [],
+      include: [
+        {
+          model: Speaker,
+          through: {
+            attributes: [],
+          },
         },
-      },
+        { model: User, as: 'creatorInfo', attributes: ['name'] },
+        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+      ],
     });
   }
 
