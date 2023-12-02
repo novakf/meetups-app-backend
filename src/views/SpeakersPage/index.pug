@@ -9,14 +9,22 @@ html(lang="en")
       include main.scss
   body
     form.form(role='form' method='GET' action='/speakers')
-      input.form-input(type='text' placeholder='Поиск по компании' name='company' value=searchTitle)
-      button.form-button(type="submit") Поиск
+      input.form-input(type='text' placeholder='Введите название компании' name='company' value=company)
+      button.form-button(type="submit") Поиск 
     ul.cards
       each speaker in speakers
         div.card
           a.link(href='/speakers/' + speaker.id)
             div.imgContainer
-              img.avatar(src=speaker.avatar_img, alt="preview")
+              if speaker.status === "неактивный"
+                img.greyAvatar(src=speaker.avatarImg)
+              else
+                img.avatar(src=speaker.avatarImg)
             div.content
               div.name #{speaker.name}
               div.info #{speaker.organization}
+              form(role='form' method='POST' action=`/speakers/${speaker.id}`)
+                if speaker.status === "активный"
+                  button.deleteBtn(type="submit") Исключить
+                else 
+                  button.addBtn(type="submit") Активизировать

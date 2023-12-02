@@ -1,6 +1,7 @@
 doctype html
 html(lang="en")
-  head 
+  head
+    link(href="https://fonts.cdnfonts.com/css/roboto" rel="stylesheet")           
     meta(charset="UTF-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
     title #{title}
@@ -8,15 +9,23 @@ html(lang="en")
       include styles.scss
   body
     a.back(href="/speakers") <  К списку спикеров
-    div.speaker
+    div.container
       div.banner
-        div.bannerText
+        div.avatarContainer
+          img.avatar(src=avatarImg, alt="avatar")
+        div.mainInfo
           div.name #{name}
-          div.organization #{organization}
-          a.register(href="/meetups/"+meetup_id class="link") #{meetup}
-        div.imageContainer
-          img(class="image", src=avatar_img, alt="img")
+          div.companyName #{organization}
+      div.info
+        div.about
+          div.title Обо мне
+          div.text #{description}
+        div.contacts
+          div.contactsContainer
+            div.titleSmall Телефон:
+            div.text #{phone}
+            div.titleSmall Почта:
+            div.email #{email}
 
-      div.content 
-        div.description #{description}
-      
+
+
