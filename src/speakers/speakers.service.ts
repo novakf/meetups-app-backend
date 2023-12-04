@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Speaker } from './speakers.model';
 import { CreateSpeakerDto } from './dto/create-speaker.dto';
-import { Op, QueryTypes } from 'sequelize';
+import { Op, QueryTypes, Sequelize } from 'sequelize';
 import { User } from 'src/users/users.model';
 import { MeetupsSpeakers } from 'src/meetups/meetups-speakers.model';
 import { Meetup } from 'src/meetups/meetups.model';
@@ -64,6 +64,21 @@ export class SpeakersService {
       where: {
         creatorID: userID,
         status: 'черновик',
+      },
+      include: [
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
+      ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
       },
     });
 
@@ -132,9 +147,20 @@ export class SpeakersService {
             attributes: [],
           },
         },
-        { model: User, as: 'creatorInfo', attributes: ['name'] },
-        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
     });
 
     return resultMeetup;
