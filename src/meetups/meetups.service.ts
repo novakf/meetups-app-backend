@@ -70,9 +70,20 @@ export class MeetupsService {
             },
       include: [
         Speaker,
-        { model: User, as: 'creatorInfo', attributes: ['name'] },
-        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
     });
 
     return meetups;
@@ -90,9 +101,20 @@ export class MeetupsService {
             attributes: [],
           },
         },
-        { model: User, as: 'creatorInfo', attributes: ['name'] },
-        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
     });
 
     if (!meetup) return 'Митап не найден';
@@ -110,26 +132,32 @@ export class MeetupsService {
       },
     );
 
-    const currentMeetup = await this.meetupRepository.findOne({
+    const currentMeetup = await this.meetupRepository.findAll({
       where: {
         creatorID: userID,
         status: 'черновик',
       },
       include: [
+        Speaker,
+        { model: User, as: 'creatorInfo', attributes: [] },
         {
-          model: Speaker,
-          through: {
-            attributes: [],
-          },
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
         },
-        { model: User, as: 'creatorInfo', attributes: ['name'] },
-        { model: User, as: 'moderatorInfo', attributes: ['name'] },
       ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
     });
 
     //return result[0] === 1 ? `Информация о митапе с id=${id} изменена` : `Не удалось изменить информацию о митапе с id=${id}`;
 
-    return currentMeetup;
+    return currentMeetup[0];
   }
 
   async completeMeetupByCreator(userID: number) {
@@ -195,9 +223,20 @@ export class MeetupsService {
             attributes: [],
           },
         },
-        { model: User, as: 'creatorInfo', attributes: ['name'] },
-        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
     });
   }
 
@@ -251,9 +290,20 @@ export class MeetupsService {
             attributes: [],
           },
         },
-        { model: User, as: 'creatorInfo', attributes: ['name'] },
-        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
     });
   }
 
@@ -278,9 +328,20 @@ export class MeetupsService {
             attributes: [],
           },
         },
-        { model: User, as: 'creatorInfo', attributes: ['name'] },
-        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
     });
   }
 
@@ -302,8 +363,7 @@ export class MeetupsService {
     });
 
     if (result === 0) return 'Не удалось удалить спикера из заявки на митап';
-
-    return this.meetupRepository.findOne({
+    const resultMeetup = await this.meetupRepository.findAll({
       where: {
         creatorID: userID,
         status: 'черновик',
@@ -315,10 +375,22 @@ export class MeetupsService {
             attributes: [],
           },
         },
-        { model: User, as: 'creatorInfo', attributes: ['name'] },
-        { model: User, as: 'moderatorInfo', attributes: ['name'] },
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
     });
+    return resultMeetup[0];
   }
 
   async updateSpeaker(id: number, userID: number, dto: CreateMeetupSpeakerDto) {
