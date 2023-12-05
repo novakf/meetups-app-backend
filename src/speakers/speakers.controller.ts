@@ -18,7 +18,23 @@ import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MinioService } from 'src/minio/minio.service';
 import { CreateSpeakerDto } from './dto/create-speaker.dto';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  BadRequestStatusType,
+  NotFoundStatusType,
+  SpeakerCreateBody,
+  SpeakersResponseType,
+} from 'src/types';
+import { Speaker } from './speakers.model';
+import { Meetup } from 'src/meetups/meetups.model';
 
+@ApiTags('Спикеры')
 @Controller('speakers')
 export class SpeakersController {
   constructor(
@@ -26,9 +42,11 @@ export class SpeakersController {
     private readonly minioService: MinioService,
   ) {}
 
+  @ApiOperation({ summary: 'Получить спикеров по компании' })
+  @ApiResponse({ status: 200, type: SpeakersResponseType })
   @Get('')
-  @Render('SpeakersPage')
-  async getByStatus(@Req() request?: Request) {
+  //@Render('SpeakersPage')
+  async getByCompany(@Req() request?: Request) {
     const userID = 1;
 
     let company = request.query.company?.toString();
@@ -41,8 +59,10 @@ export class SpeakersController {
     return { ...speakers, company };
   }
 
+  @ApiOperation({ summary: 'Получить спикера по id' })
+  @ApiResponse({ status: 200, type: Speaker })
   @Get(':id')
-  @Render('SingleSpeakerPage')
+  //@Render('SingleSpeakerPage')
   getById(@Param('id', ParseIntPipe) id: number) {
     return this.speakersService.getById(id);
   }
@@ -53,6 +73,9 @@ export class SpeakersController {
   //    return this.speakersService.changeStatus(id);
   //  }
 
+  @ApiOperation({ summary: 'Создать нового спикера' })
+  @ApiBody({ type: SpeakerCreateBody })
+  @ApiResponse({ status: 201, type: Speaker })
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(
@@ -72,6 +95,20 @@ export class SpeakersController {
     return speaker;
   }
 
+  @ApiOperation({ summary: 'Изменить фотографию пользователя' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, type: Speaker })
   @Put('/image/:id')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
@@ -84,22 +121,28 @@ export class SpeakersController {
       currentSpeaker.avatarImg.split('meetups-app')[1],
     );
 
-    await this.speakersService.uploadAvatar(id, file.originalname);
-
-    const fileName = await this.minioService.uploadFile(
-      `/speakers/${id}`,
-      file,
+    const updatedSpeaker = await this.speakersService.uploadAvatar(
+      id,
+      file.originalname,
     );
 
-    return `Изображение изменено на ${fileName}`;
+    this.minioService.uploadFile(`/speakers/${id}`, file);
+
+    return updatedSpeaker;
   }
 
+  @ApiOperation({ summary: 'Добавить спикера в митап' })
+  @ApiResponse({ status: 200, type: Meetup })
+  @ApiResponse({ status: 400, type: BadRequestStatusType })
   @Post(':id')
   addToMeetup(@Param('id', ParseIntPipe) id: number) {
     let userID = 1;
     return this.speakersService.addSpeakerToMeetup(id, userID);
   }
 
+  @ApiOperation({ summary: 'Удалить спикера' })
+  @ApiResponse({ status: 200, type: SpeakersResponseType })
+  @ApiResponse({ status: 404, type: NotFoundStatusType })
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
     const userID = 1;
@@ -114,11 +157,15 @@ export class SpeakersController {
     return this.speakersService.deleteSpeaker(userID, id);
   }
 
+  @ApiOperation({ summary: 'Изменить информацию о спикере' })
+  @ApiResponse({ status: 200, type: SpeakersResponseType })
+  @ApiBody({ type: CreateSpeakerDto })
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() speakerDto: CreateSpeakerDto,
   ) {
-    return this.speakersService.updateSpeaker(id, speakerDto);
+    const userID = 1;
+    return this.speakersService.updateSpeaker(userID, id, speakerDto);
   }
 }
