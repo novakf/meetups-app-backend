@@ -11,6 +11,8 @@ export type MeetupStatusType =
 
 export type SpeakerStatusType = 'активный' | 'удален';
 
+export type UserRoleType = 'участник' | 'организатор' | 'модератор';
+
 export type MeetupsType = {
   id: number;
   status: string;
@@ -61,6 +63,14 @@ export class BadRequestStatusType {
   statusCode: number;
 
   @ApiProperty({ example: 'Плохой запрос' })
+  message: string;
+}
+
+export class UnauthorizedStatusType {
+  @ApiProperty({ example: 401 })
+  statusCode: number;
+
+  @ApiProperty({ example: 'Неавторизован' })
   message: string;
 }
 
@@ -152,4 +162,12 @@ export class MeetupSpeakerUpdateBody {
     required: false,
   })
   reportDescription?: string;
+}
+
+export class LoginUserType {
+  @ApiProperty({ example: 'name@example.com' })
+  email: string;
+
+  @ApiProperty({ example: 'password' })
+  password: string;
 }

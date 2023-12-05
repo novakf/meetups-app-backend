@@ -7,14 +7,14 @@ import { SpeakersModule } from './speakers/speakers.module';
 import { Speaker } from './speakers/speakers.model';
 import { MeetupsSpeakers } from './meetups/meetups-speakers.model';
 import { UsersController } from './users/users.controller';
-import { UsersService } from './users/users.service';
 import { UsersModule } from './users/users.module';
 import { User } from './users/users.model';
 import { MinioService } from './minio/minio.service';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   controllers: [UsersController],
-  providers: [UsersService, MinioService],
+  providers: [MinioService],
   imports: [
     ConfigModule.forRoot({
       envFilePath: `.${process.env.NODE_ENV}.env`,
@@ -32,6 +32,7 @@ import { MinioService } from './minio/minio.service';
     MeetupsModule,
     SpeakersModule,
     UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
