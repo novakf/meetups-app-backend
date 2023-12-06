@@ -153,7 +153,7 @@ export class MeetupsController {
     return this.meetupsService.deleteSpeakerFromMeetup(id, user.id);
   }
 
-  @ApiTags('Изменение спикера, входящего в митап')
+  @ApiTags('Спикеры, включенные в митап')
   @ApiOperation({ summary: 'Изменить информацию о спикере в митапе' })
   @ApiBody({ type: MeetupSpeakerUpdateBody })
   @ApiResponse({ status: 200, type: Meetup })
