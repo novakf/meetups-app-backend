@@ -13,6 +13,7 @@ import { User } from 'src/users/users.model';
 import { LoginUserType } from 'src/types';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { uuid } from 'uuidv4';
 
 @Injectable()
 export class AuthService {
@@ -22,16 +23,17 @@ export class AuthService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
+  async logout(token: string) {
+    const user = this.jwtService.verify(token);
+    await this.cacheManager.set(uuid(), user.email.toString(), {
+      ttl: 86400,
+    });
+  }
+
   async login(userDto: LoginUserType) {
     const user = await this.validateUser(userDto);
 
-    const cachedToken = await this.cacheManager.get(`${user.id}`);
-    if (cachedToken) {
-      return cachedToken;
-    }
-    
     const token = await this.generateToken(user);
-    await this.cacheManager.set(`${user.id}`, token, { ttl: 86400 });
 
     return token;
   }

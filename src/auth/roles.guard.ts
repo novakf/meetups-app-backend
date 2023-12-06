@@ -30,12 +30,11 @@ export class RolesGuard implements CanActivate {
       if (!requiredRoles) return true;
 
       const req = context.switchToHttp().getRequest();
-
-      const token = req.cookies.meetups_access_token.token;
+      const token = req.cookies.meetups_access_token?.token;
 
       if (!token)
         throw new UnauthorizedException({
-          message: 'Пользователь не авторизован',
+          message: 'Пользователь не авторизован (без токена)',
         });
 
       const user = this.jwtService.verify(token);

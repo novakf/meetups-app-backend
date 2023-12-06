@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { AuthService } from './auth.service';
@@ -7,7 +7,7 @@ import {
   LoginUserType,
   UnauthorizedStatusType,
 } from 'src/types';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @ApiTags('Авторизация')
 @Controller('auth')
@@ -71,5 +71,26 @@ export class AuthController {
       })
       .status(200)
       .send({ status: 'ok' });
+  }
+
+  @ApiOperation({ summary: 'Выход их аккаунта' })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', example: 'ok' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, type: UnauthorizedStatusType })
+  @ApiResponse({ status: 400, type: BadRequestStatusType })
+  @Post('/logout')
+  async logout(@Res({ passthrough: true }) res: Response, @Req() request: Request) {
+    const token = request.cookies.meetups_access_token.token
+    console.log(token)
+    await this.authService.logout(token)
+    res.clearCookie('meetups_access_token').status(200).send({ status: 'ok' });
+
   }
 }

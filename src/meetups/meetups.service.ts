@@ -99,13 +99,13 @@ export class MeetupsService {
       where:
         status && !(startDate && endDate)
           ? {
-              creatorID,
+              creatorID: creatorID,
               [Op.not]: { status: 'черновик' || 'отклонен' },
               status: status,
             }
           : startDate && endDate && !status
           ? {
-              creatorID,
+              creatorID: creatorID,
               [Op.not]: { status: 'черновик' || 'отклонен' },
               [Op.and]: [
                 sequelize.where(
@@ -122,7 +122,7 @@ export class MeetupsService {
             }
           : status && startDate && endDate
           ? {
-              creatorID,
+              creatorID: creatorID,
               status: status,
               [Op.not]: { status: 'черновик' || 'отклонен' },
               [Op.and]: [
@@ -140,7 +140,7 @@ export class MeetupsService {
             }
           : {
               [Op.not]: { status: 'черновик' || 'отклонен' },
-              creatorID,
+              creatorID: creatorID,
             },
       include: [
         Speaker,

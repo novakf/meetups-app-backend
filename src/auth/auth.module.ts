@@ -11,7 +11,7 @@ import * as redisStore from 'cache-manager-redis-store';
   imports: [
     forwardRef(() => UsersModule),
     JwtModule.register({
-      secret: process.env.PRIVATE_KEY || 'SECRET',
+      secret:'SECRET',
       signOptions: {
         expiresIn: '24h',
       },

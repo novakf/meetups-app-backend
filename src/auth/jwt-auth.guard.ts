@@ -14,21 +14,20 @@ export class JwtAuthGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const req = context.switchToHttp().getRequest();
-
     try {
-      const token = req.cookies.meetups_access_token.token;
-
+      const req = context.switchToHttp().getRequest();
+      const token = req.cookies.meetups_access_token?.token;
+      
       if (!token)
         throw new UnauthorizedException({
-          message: 'Пользователь не авторизован',
+          message: 'Пользователь не авторизован (без токена)',
         });
 
-      const user = this.jwtService.verify(token);
-      console.log(user)
+      const user = this.jwtService.verify(token, {secret: 'SECRET'});
       req.user = user;
       return true;
     } catch (e) {
+      console.log(e)
       throw new UnauthorizedException({
         message: 'Пользователь не авторизован',
       });

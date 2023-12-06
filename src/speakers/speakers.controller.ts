@@ -156,7 +156,7 @@ export class SpeakersController {
   @Post(':id')
   addToMeetup(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
     const token = request.cookies.meetups_access_token.token;
-    const user = this.jwtService.verify(token);
+    const user = this.jwtService.verify(token, {secret: 'SECRET'});
     return this.speakersService.addSpeakerToMeetup(id, user.id);
   }
 
