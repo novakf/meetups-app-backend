@@ -1,6 +1,7 @@
 import {
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -10,17 +11,29 @@ import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcryptjs';
 import { User } from 'src/users/users.model';
 import { LoginUserType } from 'src/types';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UsersService,
     private jwtService: JwtService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async login(userDto: LoginUserType) {
     const user = await this.validateUser(userDto);
-    return this.generateToken(user);
+
+    const cachedToken = await this.cacheManager.get(`${user.id}`);
+    if (cachedToken) {
+      return cachedToken;
+    }
+    
+    const token = await this.generateToken(user);
+    await this.cacheManager.set(`${user.id}`, token, { ttl: 86400 });
+
+    return token;
   }
 
   async signup(userDto: CreateUserDto) {
