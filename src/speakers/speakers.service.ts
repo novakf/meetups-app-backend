@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Speaker } from './speakers.model';
 import { CreateSpeakerDto } from './dto/create-speaker.dto';
@@ -60,12 +60,13 @@ export class SpeakersService {
       attributes: { exclude: ['userID'] },
     });
 
-    const meetup = await this.meetupRepository.findOne({
+    const meetup = await this.meetupRepository.findAll({
       where: {
         creatorID: userID,
         status: 'черновик',
       },
       include: [
+        Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
         {
           model: User,
@@ -82,7 +83,7 @@ export class SpeakersService {
       },
     });
 
-    return { meetup, speakers };
+    return { meetup: meetup[0], speakers };
   }
 
   async getById(id: number) {
@@ -103,7 +104,8 @@ export class SpeakersService {
     });
 
     if (result === 0)
-      return `Не удалось удалить спикера с id=${id} / спикер с id=${id} не найден`;
+      throw new HttpException('Спикер не найден', HttpStatus.NOT_FOUND);
+    //return `Не удалось удалить спикера с id=${id} / спикер с id=${id} не найден`;
 
     return this.getByOrganization(userID);
   }
@@ -129,7 +131,11 @@ export class SpeakersService {
       },
     });
 
-    if (currentRecord) return 'Спикер уже добавлен в заявку';
+    if (currentRecord)
+      throw new HttpException(
+        'Спикер уже добавлен в заявку',
+        HttpStatus.BAD_REQUEST,
+      );
 
     await this.meetupsSpeakersRepository.create({
       meetupId: meetup.id,
@@ -141,12 +147,7 @@ export class SpeakersService {
         id: meetup.id,
       },
       include: [
-        {
-          model: Speaker,
-          through: {
-            attributes: [],
-          },
-        },
+        Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
         {
           model: User,
@@ -166,16 +167,14 @@ export class SpeakersService {
     return resultMeetup;
   }
 
-  async updateSpeaker(id: number, dto: CreateSpeakerDto) {
+  async updateSpeaker(userID: number, id: number, dto: CreateSpeakerDto) {
     const result = await this.speakerRepository.update(dto, {
       where: {
         id: id,
       },
     });
 
-    return result[0] === 1
-      ? `Информация о спикере с id=${id} изменена`
-      : `Не удалось изменить информацию о спикере с id=${id}`;
+    return this.getByOrganization(userID);
   }
 
   async changeStatus(id: number) {
