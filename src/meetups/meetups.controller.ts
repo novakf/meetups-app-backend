@@ -90,6 +90,7 @@ export class MeetupsController {
   @ApiResponse({ status: 404, type: NotFoundStatusType })
   @ApiResponse({ status: 403, type: ForbiddenStatusType })
   @ApiResponse({ status: 400, type: BadRequestStatusType })
+  @UseGuards(JwtAuthGuard)
   @Put('/complete/creator/')
   completeByCreator(@Req() request: Request) {
     const token = request.cookies.meetups_access_token.token;
@@ -130,6 +131,7 @@ export class MeetupsController {
   @ApiOperation({ summary: 'Удаление заявки' })
   @ApiResponse({ status: 200, type: [Meetup] })
   @ApiResponse({ status: 404, type: NotFoundStatusType })
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   delete(@Param('id', ParseIntPipe) id: number) {
     return this.meetupsService.deleteMeetup(id);
@@ -140,6 +142,7 @@ export class MeetupsController {
   @ApiResponse({ status: 200, type: Meetup })
   @ApiResponse({ status: 404, type: NotFoundStatusType })
   @ApiResponse({ status: 400, type: BadRequestStatusType })
+  @UseGuards(JwtAuthGuard)
   @Delete('/speaker/:id')
   deleteSpeaker(
     @Param('id', ParseIntPipe) id: number,
@@ -155,6 +158,7 @@ export class MeetupsController {
   @ApiBody({ type: MeetupSpeakerUpdateBody })
   @ApiResponse({ status: 200, type: Meetup })
   @ApiResponse({ status: 404, type: NotFoundStatusType })
+  @UseGuards(JwtAuthGuard)
   @Put('/speaker/:id')
   updateSpeaker(
     @Param('id', ParseIntPipe) id: number,
