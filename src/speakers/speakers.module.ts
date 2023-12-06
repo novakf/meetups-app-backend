@@ -8,12 +8,14 @@ import { MeetupsSpeakers } from 'src/meetups/meetups-speakers.model';
 import { User } from 'src/users/users.model';
 import { MinioService } from 'src/minio/minio.service';
 import { ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   controllers: [SpeakersController],
   providers: [SpeakersService, MinioService, ConfigService],
   imports: [
-    SequelizeModule.forFeature([Speaker, Meetup, MeetupsSpeakers])
-  ]
+    JwtModule,
+    SequelizeModule.forFeature([Speaker, Meetup, MeetupsSpeakers]),
+  ],
 })
 export class SpeakersModule {}

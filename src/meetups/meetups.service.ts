@@ -29,12 +29,12 @@ export class MeetupsService {
       where:
         status && !(startDate && endDate)
           ? {
-              [Op.not]: { status: 'черновик' || 'отменен' },
+              [Op.not]: { status: 'черновик' || 'отклонен' },
               status: status,
             }
           : startDate && endDate && !status
           ? {
-              [Op.not]: { status: 'черновик' || 'отменен' },
+              [Op.not]: { status: 'черновик' || 'отклонен' },
               [Op.and]: [
                 sequelize.where(
                   sequelize.fn('date', sequelize.col('createdAt')),
@@ -51,7 +51,7 @@ export class MeetupsService {
           : status && startDate && endDate
           ? {
               status: status,
-              [Op.not]: { status: 'черновик' || 'отменен' },
+              [Op.not]: { status: 'черновик' || 'отклонен' },
               [Op.and]: [
                 sequelize.where(
                   sequelize.fn('date', sequelize.col('createdAt')),
@@ -66,7 +66,81 @@ export class MeetupsService {
               ],
             }
           : {
-              [Op.not]: { status: 'черновик' || 'отменен' },
+              [Op.not]: { status: 'черновик' || 'отклонен' },
+            },
+      include: [
+        Speaker,
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
+      ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
+    });
+
+    return meetups;
+  }
+
+  async getUserMeetups(
+    creatorID: number,
+    status?: string,
+    startDate?: string,
+    endDate?: string,
+  ) {
+    const meetups = await this.meetupRepository.findAll({
+      where:
+        status && !(startDate && endDate)
+          ? {
+              creatorID,
+              [Op.not]: { status: 'черновик' || 'отклонен' },
+              status: status,
+            }
+          : startDate && endDate && !status
+          ? {
+              creatorID,
+              [Op.not]: { status: 'черновик' || 'отклонен' },
+              [Op.and]: [
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('createdAt')),
+                  '>=',
+                  startDate,
+                ),
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('createdAt')),
+                  '<=',
+                  endDate,
+                ),
+              ],
+            }
+          : status && startDate && endDate
+          ? {
+              creatorID,
+              status: status,
+              [Op.not]: { status: 'черновик' || 'отклонен' },
+              [Op.and]: [
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('createdAt')),
+                  '>=',
+                  startDate,
+                ),
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('createdAt')),
+                  '<=',
+                  endDate,
+                ),
+              ],
+            }
+          : {
+              [Op.not]: { status: 'черновик' || 'отклонен' },
+              creatorID,
             },
       include: [
         Speaker,
@@ -339,7 +413,7 @@ export class MeetupsService {
 
     return this.meetupRepository.findAll({
       where: {
-        [Op.not]: { status: 'черновик' || 'отменен' },
+        [Op.not]: { status: 'черновик' || 'отклонен' },
       },
       include: [
         Speaker,

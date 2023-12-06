@@ -22,27 +22,27 @@ export class RolesGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     try {
-      const requiredRole = this.reflector.getAllAndOverride<string>(ROLE_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]);
+      const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+        ROLE_KEY,
+        [context.getHandler(), context.getClass()],
+      );
 
-      if (!requiredRole) return true;
+      if (!requiredRoles) return true;
 
       const req = context.switchToHttp().getRequest();
 
-      const authHeader = req.headers.authorization;
-      const [bearer, token] = authHeader.split(' ');
+      const token = req.cookies.meetups_access_token.token;
 
-      if (bearer !== 'Bearer' || !token)
+      if (!token)
         throw new UnauthorizedException({
           message: 'Пользователь не авторизован',
         });
 
       const user = this.jwtService.verify(token);
       req.user = user;
-      return requiredRole === user.role;
+      return requiredRoles.includes(user.role);
     } catch (e) {
+      console.log(e);
       throw new HttpException(
         'Пользователь не авторизован',
         HttpStatus.FORBIDDEN,

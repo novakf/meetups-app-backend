@@ -11,6 +11,7 @@ import {
   Render,
   Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { SpeakersService } from './speakers.service';
@@ -22,6 +23,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -29,10 +31,15 @@ import {
   BadRequestStatusType,
   NotFoundStatusType,
   SpeakerCreateBody,
+  SpeakerUpdateBody,
   SpeakersResponseType,
 } from 'src/types';
 import { Speaker } from './speakers.model';
 import { Meetup } from 'src/meetups/meetups.model';
+import { JwtService } from '@nestjs/jwt';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles-auth.decorator';
 
 @ApiTags('Спикеры')
 @Controller('speakers')
@@ -40,19 +47,26 @@ export class SpeakersController {
   constructor(
     private speakersService: SpeakersService,
     private readonly minioService: MinioService,
+    private jwtService: JwtService,
   ) {}
 
   @ApiOperation({ summary: 'Получить спикеров по компании' })
   @ApiResponse({ status: 200, type: SpeakersResponseType })
+  @ApiQuery({
+    type: 'string',
+    name: 'company',
+    required: false,
+  })
   @Get('')
   //@Render('SpeakersPage')
   async getByCompany(@Req() request?: Request) {
-    const userID = 1;
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
 
     let company = request.query.company?.toString();
 
     let speakers = await this.speakersService.getByOrganization(
-      userID,
+      user.id,
       company,
     );
 
@@ -76,6 +90,8 @@ export class SpeakersController {
   @ApiOperation({ summary: 'Создать нового спикера' })
   @ApiBody({ type: SpeakerCreateBody })
   @ApiResponse({ status: 201, type: Speaker })
+  @Roles('модератор')
+  @UseGuards(RolesGuard)
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(
@@ -109,6 +125,8 @@ export class SpeakersController {
     },
   })
   @ApiResponse({ status: 200, type: Speaker })
+  @Roles('модератор')
+  @UseGuards(RolesGuard)
   @Put('/image/:id')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
@@ -134,18 +152,23 @@ export class SpeakersController {
   @ApiOperation({ summary: 'Добавить спикера в митап' })
   @ApiResponse({ status: 200, type: Meetup })
   @ApiResponse({ status: 400, type: BadRequestStatusType })
+  @UseGuards(JwtAuthGuard)
   @Post(':id')
-  addToMeetup(@Param('id', ParseIntPipe) id: number) {
-    let userID = 1;
-    return this.speakersService.addSpeakerToMeetup(id, userID);
+  addToMeetup(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+    return this.speakersService.addSpeakerToMeetup(id, user.id);
   }
 
   @ApiOperation({ summary: 'Удалить спикера' })
   @ApiResponse({ status: 200, type: SpeakersResponseType })
   @ApiResponse({ status: 404, type: NotFoundStatusType })
+  @Roles('модератор')
+  @UseGuards(RolesGuard)
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    const userID = 1;
+  async delete(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
 
     const speaker = await this.getById(id);
 
@@ -154,18 +177,22 @@ export class SpeakersController {
         speaker.avatarImg.split('meetups-app')[1],
       );
 
-    return this.speakersService.deleteSpeaker(userID, id);
+    return this.speakersService.deleteSpeaker(user.id, id);
   }
 
   @ApiOperation({ summary: 'Изменить информацию о спикере' })
   @ApiResponse({ status: 200, type: SpeakersResponseType })
-  @ApiBody({ type: CreateSpeakerDto })
+  @ApiBody({ type: SpeakerUpdateBody })
+  @Roles('модератор')
+  @UseGuards(RolesGuard)
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() speakerDto: CreateSpeakerDto,
+    @Req() request: Request,
   ) {
-    const userID = 1;
-    return this.speakersService.updateSpeaker(userID, id, speakerDto);
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+    return this.speakersService.updateSpeaker(user.id, id, speakerDto);
   }
 }

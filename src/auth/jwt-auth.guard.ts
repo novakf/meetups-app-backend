@@ -17,15 +17,15 @@ export class JwtAuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
 
     try {
-      const authHeader = req.headers.authorization;
-      const [bearer, token] = authHeader.split(' ');
+      const token = req.cookies.meetups_access_token.token;
 
-      if (bearer !== 'Bearer' || !token)
+      if (!token)
         throw new UnauthorizedException({
           message: 'Пользователь не авторизован',
         });
 
       const user = this.jwtService.verify(token);
+      console.log(user)
       req.user = user;
       return true;
     } catch (e) {

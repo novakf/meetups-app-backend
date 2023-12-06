@@ -101,6 +101,11 @@ export class SpeakerCreateBody {
   description: string;
 }
 
+export class SpeakerUpdateBody {
+  @ApiProperty({ example: 'VK', required: false })
+  organization?: string;
+}
+
 export class GetMeetupsQuery {
   @ApiProperty({ example: 'отклонен', required: false })
   status?: MeetupStatusType;
@@ -108,12 +113,14 @@ export class GetMeetupsQuery {
   @ApiProperty({
     example: '2023-12-30',
     type: DataType.DATE,
+    required: false
   })
   endDate?: string;
 
   @ApiProperty({
     example: '2023-10-04',
     type: DataType.DATE,
+    required: false
   })
   startDate?: string;
 }

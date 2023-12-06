@@ -9,6 +9,7 @@ import {
   Put,
   Render,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { MeetupsService } from './meetups.service';
 import { CreateMeetupDto } from './dto/create-meetup.dto';
@@ -31,22 +32,35 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Meetup } from './meetups.model';
+import { Roles } from 'src/auth/roles-auth.decorator';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('Митапы')
 @Controller('meetups')
 export class MeetupsController {
-  constructor(private meetupsService: MeetupsService) {}
+  constructor(
+    private meetupsService: MeetupsService,
+    private jwtService: JwtService,
+  ) {}
 
   @ApiOperation({ summary: 'Получить все митапы по дате / статусу' })
   @ApiQuery({ type: GetMeetupsQuery })
   @ApiResponse({ status: 200, type: [Meetup] })
+  @UseGuards(JwtAuthGuard)
   @Get()
-  getAll(@Req() request?: Request) {
+  getAll(@Req() request: Request) {
     let status = request.query.status?.toString();
     let startDate = request.query.startDate?.toString();
     let endDate = request.query.endDate?.toString();
 
-    return this.meetupsService.getAllMeetups(status, startDate, endDate);
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+
+    return user.role === 'модератор'
+      ? this.meetupsService.getAllMeetups(status, startDate, endDate)
+      : this.meetupsService.getUserMeetups(user.id, status, startDate, endDate);
   }
 
   @ApiOperation({ summary: 'Получить митап по id' })
@@ -62,10 +76,13 @@ export class MeetupsController {
   @ApiResponse({ status: 200, type: Meetup })
   @ApiResponse({ status: 404, type: NotFoundStatusType })
   @ApiResponse({ status: 400, type: BadRequestStatusType })
+  @UseGuards(JwtAuthGuard)
   @Put()
-  update(@Body() meetupDto: CreateMeetupDto) {
-    const userID = 1;
-    return this.meetupsService.updateMeetup(userID, meetupDto);
+  update(@Body() meetupDto: CreateMeetupDto, @Req() request: Request) {
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+
+    return this.meetupsService.updateMeetup(user.id, meetupDto);
   }
 
   @ApiOperation({ summary: 'Формирование заявки создателем' })
@@ -74,9 +91,10 @@ export class MeetupsController {
   @ApiResponse({ status: 403, type: ForbiddenStatusType })
   @ApiResponse({ status: 400, type: BadRequestStatusType })
   @Put('/complete/creator/')
-  completeByCreator() {
-    const userID = 1;
-    return this.meetupsService.completeMeetupByCreator(userID);
+  completeByCreator(@Req() request: Request) {
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+    return this.meetupsService.completeMeetupByCreator(user.id);
   }
 
   @ApiOperation({ summary: 'Формирование заявки модератором' })
@@ -91,15 +109,20 @@ export class MeetupsController {
       },
     },
   })
+  @Roles('модератор')
+  @UseGuards(RolesGuard)
   @Put('/complete/moderator/:id')
   completeByModerator(
     @Param('id', ParseIntPipe) id: number,
     @Body() meetupDto: CreateMeetupDto,
+    @Req() request: Request,
   ) {
-    const moderatorID = 2;
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+
     return this.meetupsService.completeMeetupByModerator(
       id,
-      moderatorID,
+      user.id,
       meetupDto.status,
     );
   }
@@ -118,12 +141,16 @@ export class MeetupsController {
   @ApiResponse({ status: 404, type: NotFoundStatusType })
   @ApiResponse({ status: 400, type: BadRequestStatusType })
   @Delete('/speaker/:id')
-  deleteSpeaker(@Param('id', ParseIntPipe) id: number) {
-    const userID = 1;
-    return this.meetupsService.deleteSpeakerFromMeetup(id, userID);
+  deleteSpeaker(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() request: Request,
+  ) {
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+    return this.meetupsService.deleteSpeakerFromMeetup(id, user.id);
   }
 
-  @ApiTags('Спикеры, включенные в митап')
+  @ApiTags('Изменение спикера, входящего в митап')
   @ApiOperation({ summary: 'Изменить информацию о спикере в митапе' })
   @ApiBody({ type: MeetupSpeakerUpdateBody })
   @ApiResponse({ status: 200, type: Meetup })
@@ -132,8 +159,10 @@ export class MeetupsController {
   updateSpeaker(
     @Param('id', ParseIntPipe) id: number,
     @Body() meetupSpeakerDto: CreateMeetupSpeakerDto,
+    @Req() request: Request,
   ) {
-    const userID = 1;
-    return this.meetupsService.updateSpeaker(id, userID, meetupSpeakerDto);
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+    return this.meetupsService.updateSpeaker(id, user.id, meetupSpeakerDto);
   }
 }
