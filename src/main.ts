@@ -12,6 +12,14 @@ async function bootstrap() {
 
   app.setBaseViewsDir(resolve('./src/views'));
   app.setViewEngine('pug');
+  app.enableCors({
+    credentials: true,
+    origin: [
+      'http://localhost:3000',
+      'http://172.20.10.4:3000',
+      'http://172.20.10.4:19006',
+    ],
+  });
 
   app.use(cookieParser());
 
@@ -23,7 +31,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/api/docs', app, document);
 
-  await app.listen(PORT, () => console.log(`Server started on port = ${PORT}`));
+  await app.listen(3001, () => console.log(`Server started on port = ${PORT}`));
 }
 
 bootstrap();

@@ -5,11 +5,13 @@ import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
+import { MeetupsModule } from 'src/meetups/meetups.module';
 @Module({
   controllers: [AuthController],
   providers: [AuthService],
   imports: [
     forwardRef(() => UsersModule),
+    forwardRef(() => MeetupsModule),
     JwtModule.register({
       secret:'SECRET',
       signOptions: {

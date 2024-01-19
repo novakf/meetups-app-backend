@@ -60,13 +60,14 @@ export class SpeakersController {
   @Get('')
   //@Render('SpeakersPage')
   async getByCompany(@Req() request?: Request) {
-    const token = request.cookies.meetups_access_token.token;
-    const user = this.jwtService.verify(token);
+    const token = request.cookies.meetups_access_token?.token;
+
+    const user = token && this.jwtService.verify(token, { secret: 'SECRET' });
 
     let company = request.query.company?.toString();
 
     let speakers = await this.speakersService.getByOrganization(
-      user.id,
+      user?.id,
       company,
     );
 
@@ -156,7 +157,7 @@ export class SpeakersController {
   @Post(':id')
   addToMeetup(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
     const token = request.cookies.meetups_access_token.token;
-    const user = this.jwtService.verify(token, {secret: 'SECRET'});
+    const user = this.jwtService.verify(token, { secret: 'SECRET' });
     return this.speakersService.addSpeakerToMeetup(id, user.id);
   }
 
@@ -168,11 +169,11 @@ export class SpeakersController {
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
     const token = request.cookies.meetups_access_token.token;
-    const user = this.jwtService.verify(token);
+    const user = this.jwtService.verify(token, { secret: 'SECRET' });
 
     const speaker = await this.getById(id);
 
-    if (speaker)
+    if (speaker.avatarImg)
       await this.minioService.deleteFile(
         speaker.avatarImg.split('meetups-app')[1],
       );
@@ -186,13 +187,32 @@ export class SpeakersController {
   @Roles('модератор')
   @UseGuards(RolesGuard)
   @Put(':id')
-  update(
+  @UseInterceptors(FileInterceptor('file'))
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() speakerDto: CreateSpeakerDto,
     @Req() request: Request,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     const token = request.cookies.meetups_access_token.token;
-    const user = this.jwtService.verify(token);
-    return this.speakersService.updateSpeaker(user.id, id, speakerDto);
+    const user = this.jwtService.verify(token, { secret: 'SECRET' });
+
+    await this.minioService.createBucketIfNotExists();
+
+    const speaker = await this.speakersService.updateSpeaker(
+      user.id,
+      id,
+      speakerDto,
+      file && file.originalname,
+    );
+
+    if (file) {
+      await this.minioService.deleteFile(
+        speaker.avatarImg.split('meetups-app')[1],
+      );
+      await this.minioService.uploadFile(`/speakers/${id}/`, file);
+    }
+
+    return speaker;
   }
 }

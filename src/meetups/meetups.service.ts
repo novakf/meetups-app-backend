@@ -24,17 +24,19 @@ export class MeetupsService {
     return meetup;
   }
 
-  async getAllMeetups(status?: string, startDate?: string, endDate?: string) {
+  async getAllMeetups(status?: string[], startDate?: string, endDate?: string) {
     const meetups = await this.meetupRepository.findAll({
       where:
         status && !(startDate && endDate)
           ? {
-              [Op.not]: { status: 'черновик' || 'отклонен' },
-              status: status,
+              [Op.not]: { status: ['черновик', 'удален'] },
+              status: {
+                [Op.in]: status,
+              },
             }
           : startDate && endDate && !status
           ? {
-              [Op.not]: { status: 'черновик' || 'отклонен' },
+              [Op.not]: { status: ['черновик', 'удален'] },
               [Op.and]: [
                 sequelize.where(
                   sequelize.fn('date', sequelize.col('createdAt')),
@@ -50,8 +52,10 @@ export class MeetupsService {
             }
           : status && startDate && endDate
           ? {
-              status: status,
-              [Op.not]: { status: 'черновик' || 'отклонен' },
+              status: {
+                [Op.in]: status,
+              },
+              [Op.not]: { status: ['черновик', 'удален'] },
               [Op.and]: [
                 sequelize.where(
                   sequelize.fn('date', sequelize.col('createdAt')),
@@ -66,7 +70,7 @@ export class MeetupsService {
               ],
             }
           : {
-              [Op.not]: { status: 'черновик' || 'отклонен' },
+              [Op.not]: { status: ['черновик', 'удален'] },
             },
       include: [
         Speaker,
@@ -84,6 +88,7 @@ export class MeetupsService {
         ],
         exclude: ['creatorID', 'moderatorID'],
       },
+      order: [['createdAt', 'DESC']],
     });
 
     return meetups;
@@ -91,7 +96,7 @@ export class MeetupsService {
 
   async getUserMeetups(
     creatorID: number,
-    status?: string,
+    status?: string[],
     startDate?: string,
     endDate?: string,
   ) {
@@ -100,13 +105,14 @@ export class MeetupsService {
         status && !(startDate && endDate)
           ? {
               creatorID: creatorID,
-              [Op.not]: { status: 'черновик' || 'отклонен' },
-              status: status,
+              status: {
+                [Op.in]: status,
+              },
             }
           : startDate && endDate && !status
           ? {
+              [Op.not]: { status: ['черновик', 'удален'] },
               creatorID: creatorID,
-              [Op.not]: { status: 'черновик' || 'отклонен' },
               [Op.and]: [
                 sequelize.where(
                   sequelize.fn('date', sequelize.col('createdAt')),
@@ -123,8 +129,9 @@ export class MeetupsService {
           : status && startDate && endDate
           ? {
               creatorID: creatorID,
-              status: status,
-              [Op.not]: { status: 'черновик' || 'отклонен' },
+              status: {
+                [Op.in]: status,
+              },
               [Op.and]: [
                 sequelize.where(
                   sequelize.fn('date', sequelize.col('createdAt')),
@@ -139,7 +146,7 @@ export class MeetupsService {
               ],
             }
           : {
-              [Op.not]: { status: 'черновик' || 'отклонен' },
+              [Op.not]: { status: 'черновик' || 'удален' },
               creatorID: creatorID,
             },
       include: [
@@ -158,16 +165,22 @@ export class MeetupsService {
         ],
         exclude: ['creatorID', 'moderatorID'],
       },
+      order: [['createdAt', 'DESC']],
     });
 
     return meetups;
   }
 
-  async getById(id: number) {
+  async getById(id: number, userID?: number) {
     const meetup = await this.meetupRepository.findOne({
-      where: {
-        id: id,
-      },
+      where: userID
+        ? {
+            id: id,
+            creatorID: userID,
+          }
+        : {
+            id: id,
+          },
       include: [
         Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
@@ -255,12 +268,7 @@ export class MeetupsService {
     });
 
     let condition = meetupsSpeakers.every((record) => {
-      if (
-        !record.startsAt ||
-        !record.endsAt ||
-        !record.reportTheme ||
-        !record.reportDescription
-      )
+      if (!record.startsAt || !record.endsAt || !record.reportTheme)
         return false;
 
       return true;
@@ -269,11 +277,7 @@ export class MeetupsService {
     if (!currentMeetup)
       throw new HttpException('Черновик не найден', HttpStatus.NOT_FOUND);
 
-    if (
-      !currentMeetup.title ||
-      !currentMeetup.date ||
-      !currentMeetup.description
-    )
+    if (!currentMeetup.title || !currentMeetup.date)
       throw new HttpException(
         'Заполните все поля заявки на митап прежде чем формировать ее',
         HttpStatus.FORBIDDEN,
@@ -326,6 +330,28 @@ export class MeetupsService {
     });
   }
 
+  async deleteMeetupByCreator(userID: number) {
+    const meetup = await this.meetupRepository.update(
+      {
+        status: 'удален',
+      },
+      {
+        where: {
+          creatorID: userID,
+          status: 'черновик',
+        },
+      },
+    );
+
+    if (!meetup)
+      throw new HttpException(
+        'Не удалось удалить заявку',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    return meetup;
+  }
+
   async completeMeetupByModerator(
     id: number,
     userID: number,
@@ -344,7 +370,7 @@ export class MeetupsService {
       );
 
     if (
-      currentMeetup.status === 'завершен' ||
+      currentMeetup.status === 'утвержден' ||
       currentMeetup.status === 'отклонен'
     )
       throw new HttpException(
@@ -358,7 +384,7 @@ export class MeetupsService {
         HttpStatus.FORBIDDEN,
       );
 
-    if (decision !== 'завершен' && decision !== 'отклонен') {
+    if (decision !== 'утвержден' && decision !== 'отклонен') {
       throw new HttpException(
         'Невозможно указать введенный статус',
         HttpStatus.FORBIDDEN,
@@ -430,6 +456,15 @@ export class MeetupsService {
           [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
         ],
         exclude: ['creatorID', 'moderatorID'],
+      },
+    });
+  }
+
+  async getDraft(userID: number) {
+    return await this.meetupRepository.findOne({
+      where: {
+        creatorID: userID,
+        status: 'черновик',
       },
     });
   }

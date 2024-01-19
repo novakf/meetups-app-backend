@@ -51,7 +51,7 @@ export class MeetupsController {
   @UseGuards(JwtAuthGuard)
   @Get()
   getAll(@Req() request: Request) {
-    let status = request.query.status?.toString();
+    let status = request.query.status as string[];
     let startDate = request.query.startDate?.toString();
     let endDate = request.query.endDate?.toString();
 
@@ -66,9 +66,13 @@ export class MeetupsController {
   @ApiOperation({ summary: 'Получить митап по id' })
   @ApiResponse({ status: 200, type: Meetup })
   @ApiResponse({ status: 404, type: NotFoundStatusType })
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  getById(@Param('id', ParseIntPipe) id: number) {
-    return this.meetupsService.getById(id);
+  getById(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+    if (user.role == 'модератор') return this.meetupsService.getById(id);
+    return this.meetupsService.getById(id, user.id);
   }
 
   @ApiOperation({ summary: 'Изменить информацию о митапе' })
@@ -96,6 +100,19 @@ export class MeetupsController {
     const token = request.cookies.meetups_access_token.token;
     const user = this.jwtService.verify(token);
     return this.meetupsService.completeMeetupByCreator(user.id);
+  }
+
+  @ApiOperation({ summary: 'Удаление заявки через статус' })
+  @ApiResponse({ status: 200, type: Meetup })
+  @ApiResponse({ status: 404, type: NotFoundStatusType })
+  @ApiResponse({ status: 403, type: ForbiddenStatusType })
+  @ApiResponse({ status: 400, type: BadRequestStatusType })
+  @UseGuards(JwtAuthGuard)
+  @Put('/delete')
+  deleteByCreator(@Req() request: Request) {
+    const token = request.cookies.meetups_access_token.token;
+    const user = this.jwtService.verify(token);
+    return this.meetupsService.deleteMeetupByCreator(user.id);
   }
 
   @ApiOperation({ summary: 'Формирование заявки модератором' })
@@ -165,6 +182,7 @@ export class MeetupsController {
     @Body() meetupSpeakerDto: CreateMeetupSpeakerDto,
     @Req() request: Request,
   ) {
+    console.log(meetupSpeakerDto);
     const token = request.cookies.meetups_access_token.token;
     const user = this.jwtService.verify(token);
     return this.meetupsService.updateSpeaker(id, user.id, meetupSpeakerDto);

@@ -74,7 +74,7 @@ export class Speaker extends Model<Speaker, SpeakerCreateAttr> {
   organization: string;
 
   @ApiProperty({example: 'Руководитель отдела', description: 'Описание'})
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: true })
   description: string;
 
   @BelongsToMany(() => Meetup, () => MeetupsSpeakers)

@@ -51,7 +51,7 @@ export class User extends Model<User, UserCreateAttr> {
     type: DataType.STRING,
     allowNull: false,
     defaultValue:
-      'http://localhost:9000/meetups-app/users/default/defaultAvatar.png',
+      'http://localhost:9000/meetups-app/users/default/defaultAvatar.jpg',
   })
   avatarImg: string;
 

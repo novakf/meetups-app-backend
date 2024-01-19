@@ -43,7 +43,7 @@ export class SpeakersService {
     });
   }
 
-  async getByOrganization(userID: number, org?: string) {
+  async getByOrganization(userID?: number, org?: string) {
     const speakers = await this.speakerRepository.findAll({
       where: org
         ? {
@@ -60,30 +60,32 @@ export class SpeakersService {
       attributes: { exclude: ['userID'] },
     });
 
-    const meetup = await this.meetupRepository.findAll({
-      where: {
-        creatorID: userID,
-        status: 'черновик',
-      },
-      include: [
-        Speaker,
-        { model: User, as: 'creatorInfo', attributes: [] },
-        {
-          model: User,
-          as: 'moderatorInfo',
-          attributes: [],
+    const meetup =
+      userID &&
+      (await this.meetupRepository.findAll({
+        where: {
+          creatorID: userID,
+          status: 'черновик',
         },
-      ],
-      attributes: {
         include: [
-          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
-          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+          Speaker,
+          { model: User, as: 'creatorInfo', attributes: [] },
+          {
+            model: User,
+            as: 'moderatorInfo',
+            attributes: [],
+          },
         ],
-        exclude: ['creatorID', 'moderatorID'],
-      },
-    });
+        attributes: {
+          include: [
+            [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+            [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+          ],
+          exclude: ['creatorID', 'moderatorID'],
+        },
+      }));
 
-    return { meetup: meetup[0], speakers };
+    return { meetup: meetup ? meetup[0] : null, speakers };
   }
 
   async getById(id: number) {
@@ -167,14 +169,31 @@ export class SpeakersService {
     return resultMeetup;
   }
 
-  async updateSpeaker(userID: number, id: number, dto: CreateSpeakerDto) {
+  async updateSpeaker(
+    userID: number,
+    id: number,
+    dto: CreateSpeakerDto,
+    fileName?: string,
+  ) {
     const result = await this.speakerRepository.update(dto, {
       where: {
         id: id,
       },
     });
 
-    return this.getByOrganization(userID);
+    if (fileName)
+      await this.speakerRepository.update(
+        {
+          avatarImg: `http://localhost:9000/meetups-app/speakers/${id}/${fileName}`,
+        },
+        {
+          where: {
+            id: id,
+          },
+        },
+      );
+
+    return this.getById(id);
   }
 
   async changeStatus(id: number) {

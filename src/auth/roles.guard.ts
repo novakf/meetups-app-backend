@@ -37,7 +37,7 @@ export class RolesGuard implements CanActivate {
           message: 'Пользователь не авторизован (без токена)',
         });
 
-      const user = this.jwtService.verify(token);
+      const user = this.jwtService.verify(token, { secret: 'SECRET' });
       req.user = user;
       return requiredRoles.includes(user.role);
     } catch (e) {

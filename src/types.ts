@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Meetup } from './meetups/meetups.model';
 import { DataType } from 'sequelize-typescript';
+import { Speaker } from './speakers/speakers.model';
 
 export type MeetupStatusType =
   | 'черновик'
   | 'удален'
   | 'сформирован'
-  | 'завершен'
+  | 'утвержден'
   | 'отклонен';
 
 export type SpeakerStatusType = 'активный' | 'удален';
@@ -85,6 +86,8 @@ export class ForbiddenStatusType {
 export class SpeakersResponseType {
   @ApiProperty({ type: Meetup })
   meetup: MeetupsType | null;
+  @ApiProperty({ type: [Speaker] })
+  speakers: SpeakerType[];
 }
 
 export class SpeakerCreateBody {
@@ -113,14 +116,14 @@ export class GetMeetupsQuery {
   @ApiProperty({
     example: '2023-12-30',
     type: DataType.DATE,
-    required: false
+    required: false,
   })
   endDate?: string;
 
   @ApiProperty({
     example: '2023-10-04',
     type: DataType.DATE,
-    required: false
+    required: false,
   })
   startDate?: string;
 }

@@ -15,5 +15,6 @@ import { AuthModule } from 'src/auth/auth.module';
     forwardRef(() => AuthModule),
     SequelizeModule.forFeature([Meetup, Speaker, MeetupsSpeakers, User]),
   ],
+  exports: [MeetupsService]
 })
 export class MeetupsModule {}

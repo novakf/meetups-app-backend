@@ -14,17 +14,24 @@ import { LoginUserType } from 'src/types';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { uuid } from 'uuidv4';
+import { MeetupsService } from 'src/meetups/meetups.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UsersService,
     private jwtService: JwtService,
+    private meetupsService: MeetupsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async logout(token: string) {
-    const user = this.jwtService.verify(token);
+    const user = this.jwtService.verify(token, { secret: 'SECRET' });
+
+    const draft = await this.meetupsService.getDraft(user.id)
+
+    if (draft) await this.meetupsService.deleteMeetup(draft.id)
+
     await this.cacheManager.set(uuid(), user.email.toString(), {
       ttl: 86400,
     });
@@ -35,7 +42,7 @@ export class AuthService {
 
     const token = await this.generateToken(user);
 
-    return token;
+    return { token, user };
   }
 
   async signup(userDto: CreateUserDto) {
@@ -52,8 +59,10 @@ export class AuthService {
       ...userDto,
       password: hashPassword,
     });
+    
+    const token = await this.generateToken(user);
 
-    return this.generateToken(user);
+    return {token, user};
   }
 
   private async generateToken(user: User) {
