@@ -1,10 +1,10 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Проведение митапов
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Система для организации митапов, включающая в себя веб-сервис, веб-приложение, нативное приложение.
 
-## Description
+Демо-версия проекта: https://novakf.github.io/meetups-app-frontend
 
-Бэкенд веб-приложения для проведения митапов по ИИ.
+Смежные репозитории:
+
+- фронтенд (React, TS, Vite): https://github.com/novakf/meetups-app-frontend
+- нативное приложение (React Native): https://github.com/novakf/meetups-native-app
