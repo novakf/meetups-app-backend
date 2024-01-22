@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Meetup } from './meetups/meetups.model';
 import { DataType } from 'sequelize-typescript';
 import { Speaker } from './speakers/speakers.model';
+import { User } from './users/users.model';
 
 export type MeetupStatusType =
   | 'черновик'
@@ -102,16 +103,22 @@ export class SpeakerCreateBody {
 
   @ApiProperty({ example: 'Разработчик' })
   description: string;
+
+  @ApiProperty({type: File, required: false})
+  file?: File | string
 }
 
 export class SpeakerUpdateBody {
   @ApiProperty({ example: 'VK', required: false })
   organization?: string;
+  
+  @ApiProperty({type: File, required: false})
+  file?: File | string
 }
 
 export class GetMeetupsQuery {
   @ApiProperty({ example: 'отклонен', required: false })
-  status?: MeetupStatusType;
+  status?: MeetupStatusType[];
 
   @ApiProperty({
     example: '2023-12-30',
@@ -180,4 +187,11 @@ export class LoginUserType {
 
   @ApiProperty({ example: 'password' })
   password: string;
+}
+
+export class AuthResponse {
+  @ApiProperty({ type: DataType.STRING })
+  status: string;
+  @ApiProperty({ type: User })
+  user: User;
 }

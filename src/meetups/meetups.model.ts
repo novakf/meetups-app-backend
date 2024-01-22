@@ -89,6 +89,13 @@ export class Meetup extends Model<Meetup, MeetupCreationAttrs> {
 
   @ApiProperty({
     example: '2023-12-04 18:03:54.897113 +00:00',
+    description: 'Дата создания заявки',
+  })
+  @Column({ type: DataType.DATE, allowNull: false })
+  createdAt: string;
+
+  @ApiProperty({
+    example: '2023-12-04 18:03:54.897113 +00:00',
     description: 'Дата подтверждения заявки',
   })
   @Column({ type: DataType.DATE, allowNull: true })

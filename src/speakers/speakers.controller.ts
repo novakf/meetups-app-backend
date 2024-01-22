@@ -40,6 +40,7 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles-auth.decorator';
+import defaultAvatar from '../assets/defaultAvatar.jpg'
 
 @ApiTags('Спикеры')
 @Controller('speakers')
@@ -89,6 +90,7 @@ export class SpeakersController {
   //  }
 
   @ApiOperation({ summary: 'Создать нового спикера' })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({ type: SpeakerCreateBody })
   @ApiResponse({ status: 201, type: Speaker })
   @Roles('модератор')
@@ -112,7 +114,7 @@ export class SpeakersController {
     return speaker;
   }
 
-  @ApiOperation({ summary: 'Изменить фотографию пользователя' })
+  @ApiOperation({ summary: 'Изменить фотографию спикера' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -173,7 +175,7 @@ export class SpeakersController {
 
     const speaker = await this.getById(id);
 
-    if (speaker.avatarImg)
+    if (speaker.avatarImg && !speaker.avatarImg.includes('/default/defaultAvatar.jpg'))
       await this.minioService.deleteFile(
         speaker.avatarImg.split('meetups-app')[1],
       );
@@ -183,6 +185,7 @@ export class SpeakersController {
 
   @ApiOperation({ summary: 'Изменить информацию о спикере' })
   @ApiResponse({ status: 200, type: SpeakersResponseType })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({ type: SpeakerUpdateBody })
   @Roles('модератор')
   @UseGuards(RolesGuard)

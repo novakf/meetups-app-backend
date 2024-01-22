@@ -1,0 +1,887 @@
+openapi: 3.0.0
+paths:
+  /users:
+    get:
+      operationId: UsersController_getAllUsers
+      summary: Получить всех пользователей
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      tags:
+        - Пользователи
+      security:
+        - cookie: []
+  /users/me:
+    get:
+      operationId: UsersController_getCurrentUser
+      summary: Получить информацию о текущем пользователе
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      tags:
+        - Пользователи
+      security:
+        - cookie: []
+  /meetups:
+    get:
+      operationId: MeetupsController_getAll
+      summary: Получить все митапы по дате / статусу
+      parameters:
+        - example: отклонен
+          required: false
+          name: status
+          in: query
+          schema:
+            type: array
+        - name: endDate
+          required: false
+          example: '2023-12-30'
+          allOf:
+            - $ref: '#/components/schemas/DATE'
+          in: query
+          schema: {}
+        - name: startDate
+          required: false
+          example: '2023-10-04'
+          allOf:
+            - $ref: '#/components/schemas/DATE'
+          in: query
+          schema: {}
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Meetup'
+      tags:
+        - Митапы
+    put:
+      operationId: MeetupsController_update
+      summary: Изменить информацию о митапе
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetupUpdateBody'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meetup'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestStatusType'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Митапы
+  /meetups/{id}:
+    get:
+      operationId: MeetupsController_getById
+      summary: Получить митап по id
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meetup'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Митапы
+    delete:
+      operationId: MeetupsController_delete
+      summary: Удаление заявки
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Meetup'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Митапы
+  /meetups/complete/creator:
+    put:
+      operationId: MeetupsController_completeByCreator
+      summary: Формирование заявки создателем
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meetup'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestStatusType'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenStatusType'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Митапы
+  /meetups/delete:
+    put:
+      operationId: MeetupsController_deleteByCreator
+      summary: Удаление заявки через статус
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meetup'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestStatusType'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenStatusType'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Митапы
+  /meetups/complete/moderator/{id}:
+    put:
+      operationId: MeetupsController_completeByModerator
+      summary: Формирование заявки модератором
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: отклонен
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meetup'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenStatusType'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Митапы
+  /meetups/speaker/{id}:
+    delete:
+      operationId: MeetupsController_deleteSpeaker
+      summary: Исключение спикера из митапа
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meetup'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestStatusType'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Митапы
+        - Спикеры, включенные в митап
+    put:
+      operationId: MeetupsController_updateSpeaker
+      summary: Изменить информацию о спикере в митапе
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetupSpeakerUpdateBody'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meetup'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Митапы
+        - Спикеры, включенные в митап
+  /auth/login:
+    post:
+      operationId: AuthController_login
+      summary: Авторизация пользователя
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserType'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestStatusType'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedStatusType'
+      tags:
+        - Авторизация
+  /auth/signup:
+    post:
+      operationId: AuthController_signup
+      summary: Регистрация пользователя
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestStatusType'
+      tags:
+        - Авторизация
+  /auth/logout:
+    post:
+      operationId: AuthController_logout
+      summary: Выход их аккаунта
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestStatusType'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedStatusType'
+      tags:
+        - Авторизация
+  /speakers:
+    get:
+      operationId: SpeakersController_getByCompany
+      summary: Получить спикеров по компании
+      parameters:
+        - name: company
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeakersResponseType'
+      tags:
+        - Спикеры
+    post:
+      operationId: SpeakersController_create
+      summary: Создать нового спикера
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SpeakerCreateBody'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Speaker'
+      tags:
+        - Спикеры
+  /speakers/{id}:
+    get:
+      operationId: SpeakersController_getById
+      summary: Получить спикера по id
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Speaker'
+      tags:
+        - Спикеры
+    post:
+      operationId: SpeakersController_addToMeetup
+      summary: Добавить спикера в митап
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meetup'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestStatusType'
+      tags:
+        - Спикеры
+    delete:
+      operationId: SpeakersController_delete
+      summary: Удалить спикера
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeakersResponseType'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundStatusType'
+      tags:
+        - Спикеры
+    put:
+      operationId: SpeakersController_update
+      summary: Изменить информацию о спикере
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SpeakerUpdateBody'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeakersResponseType'
+      tags:
+        - Спикеры
+  /speakers/image/{id}:
+    put:
+      operationId: SpeakersController_uploadImage
+      summary: Изменить фотографию спикера
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Speaker'
+      tags:
+        - Спикеры
+info:
+  title: MeetupsApp
+  description: Документация API
+  version: 1.0.0
+  contact: {}
+tags: []
+servers: []
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: number
+          example: '1'
+        name:
+          type: string
+          example: Иван Петров
+        phone:
+          type: string
+          example: 8(123)456-7890
+        email:
+          type: string
+          example: name@example.com
+        password:
+          type: string
+          example: password
+        avatarImg:
+          type: string
+        role:
+          type: string
+          example: участник
+      required:
+        - id
+        - name
+        - email
+        - password
+    DATE:
+      type: object
+      properties: {}
+    Speaker:
+      type: object
+      properties:
+        id:
+          type: number
+          example: '1'
+          description: Уникальный идентификатор
+        name:
+          type: string
+          example: Иван Петров
+          description: Имя пользователя
+        phone:
+          type: string
+          example: 8(123)456-7890
+          description: Телефон пользователя
+        email:
+          type: string
+          example: name@example.com
+          description: Почта пользователя
+        avatarImg:
+          type: string
+          example: http://localhost:9000/meetups-app/speakers/1/avatar.png
+          description: Фотография пользователя
+        status:
+          type: string
+          example: активный
+          description: Статус (активный | удален)
+        organization:
+          type: string
+          example: SberTech
+          description: Компания пользователя
+        description:
+          type: string
+          example: Руководитель отдела
+          description: Описание
+      required:
+        - id
+        - name
+        - phone
+        - email
+        - avatarImg
+        - status
+        - organization
+        - description
+    Meetup:
+      type: object
+      properties:
+        id:
+          type: number
+          example: '1'
+          description: Уникальный идентификатор
+        status:
+          type: string
+          example: черновик
+          description: Статус заявки
+        date:
+          type: string
+          example: '2023-11-29'
+          description: Дата проведения
+        place:
+          type: string
+          example: Библиотека
+          description: Место проведения
+        title:
+          type: string
+          example: AI cars
+          description: Заголовок
+        description:
+          type: string
+          example: Встреча «ИИ для автономной мобильности»
+          description: Описание
+        preview:
+          type: string
+          example: http://localhost:9000/meetups-app/meetups/1/preview.png
+          description: Превью мероприятия
+        updatedAt:
+          type: string
+          example: '2023-12-04 18:03:54.897113 +00:00'
+          description: Дата обновления заявки
+        createdAt:
+          type: string
+          example: '2023-12-04 18:03:54.897113 +00:00'
+          description: Дата создания заявки
+        confirmedAt:
+          type: string
+          example: '2023-12-04 18:03:54.897113 +00:00'
+          description: Дата подтверждения заявки
+        creatorLogin:
+          type: string
+          example: creatorLogin
+          description: Логин пользователя
+        moderatorLogin:
+          type: string
+          example: moderatorLogin
+          description: Логин модератора
+        speakers:
+          description: Спикеры, входящие в митап
+          type: array
+          items:
+            $ref: '#/components/schemas/Speaker'
+      required:
+        - id
+        - status
+        - date
+        - place
+        - title
+        - description
+        - preview
+        - updatedAt
+        - createdAt
+        - confirmedAt
+        - creatorLogin
+        - moderatorLogin
+        - speakers
+    NotFoundStatusType:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 404
+        message:
+          type: string
+          example: Не найден
+      required:
+        - statusCode
+        - message
+    MeetupUpdateBody:
+      type: object
+      properties:
+        title:
+          type: string
+          example: AI Cars
+        date:
+          example: '2023-12-04 18:03:54.897113 +00:00'
+          allOf:
+            - $ref: '#/components/schemas/DATE'
+        place:
+          type: string
+          example: УЛК
+        description:
+          type: string
+          example: Встреча «ИИ для автономной мобильности»
+    BadRequestStatusType:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 400
+        message:
+          type: string
+          example: Плохой запрос
+      required:
+        - statusCode
+        - message
+    ForbiddenStatusType:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 403
+        message:
+          type: string
+          example: Запрещено
+      required:
+        - statusCode
+        - message
+    MeetupSpeakerUpdateBody:
+      type: object
+      properties:
+        startsAt:
+          example: '2023-12-04 18:03:54.897113 +00:00'
+          allOf:
+            - $ref: '#/components/schemas/DATE'
+        endsAt:
+          example: '2023-12-04 19:03:54.897113 +00:00'
+          allOf:
+            - $ref: '#/components/schemas/DATE'
+        reportTheme:
+          type: string
+          example: Ai в машинах
+        reportDescription:
+          type: string
+          example: Об использовании исскуственного интеллекта в автомобилях
+    LoginUserType:
+      type: object
+      properties:
+        email:
+          type: string
+          example: name@example.com
+        password:
+          type: string
+          example: password
+      required:
+        - email
+        - password
+    STRING:
+      type: object
+      properties: {}
+    AuthResponse:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/STRING'
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+        - status
+        - user
+    UnauthorizedStatusType:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 401
+        message:
+          type: string
+          example: Неавторизован
+      required:
+        - statusCode
+        - message
+    CreateUserDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: name@example.com
+        name:
+          type: string
+          example: Иван Петров
+        password:
+          type: string
+          example: password
+      required:
+        - email
+        - name
+        - password
+    SpeakersResponseType:
+      type: object
+      properties:
+        meetup:
+          $ref: '#/components/schemas/Meetup'
+        speakers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Speaker'
+      required:
+        - meetup
+        - speakers
+    File:
+      type: object
+      properties: {}
+    SpeakerCreateBody:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Иван Петров
+        phone:
+          type: string
+          example: 8(123)456-7890
+        email:
+          type: string
+          example: name@example.com
+        description:
+          type: string
+          example: Разработчик
+        file:
+          $ref: '#/components/schemas/File'
+      required:
+        - name
+        - phone
+        - email
+        - description
+    SpeakerUpdateBody:
+      type: object
+      properties:
+        organization:
+          type: string
+          example: VK
+        file:
+          $ref: '#/components/schemas/File'

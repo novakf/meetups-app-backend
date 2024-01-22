@@ -1,23 +1,15 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import {
+  AuthResponse,
   BadRequestStatusType,
   LoginUserType,
   UnauthorizedStatusType,
 } from 'src/types';
 import { Request, Response } from 'express';
 import { User } from 'src/users/users.model';
-import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('Авторизация')
 @Controller('auth')
@@ -25,15 +17,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @ApiOperation({ summary: 'Авторизация пользователя' })
-  @ApiResponse({
-    status: 200,
-    schema: {
-      type: 'object',
-      properties: {
-        status: { type: 'string', example: 'ok' },
-      },
-    },
-  })
+  @ApiResponse({ status: 200, type: AuthResponse })
   @ApiResponse({ status: 401, type: UnauthorizedStatusType })
   @ApiResponse({ status: 400, type: BadRequestStatusType })
   @Post('/login')
@@ -55,15 +39,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Регистрация пользователя' })
-  @ApiResponse({
-    status: 200,
-    schema: {
-      type: 'object',
-      properties: {
-        status: { type: 'string', example: 'ok' },
-      },
-    },
-  })
+  @ApiResponse({ status: 200, type: AuthResponse })
   @ApiResponse({ status: 400, type: BadRequestStatusType })
   @Post('/signup')
   async signup(
