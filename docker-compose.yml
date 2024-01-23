@@ -1,6 +1,16 @@
 version: '3'
 
 services:
+  api:
+    image: meetups-api
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    depends_on:  
+      - postgres
+    ports:
+      - 3001:3001
+    network_mode: "host"
   postgres:
     image: postgres:15.0
     environment:
@@ -36,6 +46,16 @@ services:
       MINIO_ROOT_PASSWORD: password
     command: server --console-address :9001 /data
 
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - meetups_redis-data:/data
+
 volumes:
   meetups_minio-data: {}
   meetups_postgres-data: {}
+  meetups_redis-data: {}

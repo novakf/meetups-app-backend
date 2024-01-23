@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Meetup } from './meetups.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { CreateMeetupDto } from './dto/create-meetup.dto';
@@ -24,17 +24,19 @@ export class MeetupsService {
     return meetup;
   }
 
-  async getAllMeetups(status?: string, startDate?: string, endDate?: string) {
+  async getAllMeetups(status?: string[], startDate?: string, endDate?: string) {
     const meetups = await this.meetupRepository.findAll({
       where:
         status && !(startDate && endDate)
           ? {
-              [Op.not]: { status: 'черновик' || 'отменен' },
-              status: status,
+              [Op.not]: { status: ['черновик', 'удален'] },
+              status: {
+                [Op.in]: status,
+              },
             }
           : startDate && endDate && !status
           ? {
-              [Op.not]: { status: 'черновик' || 'отменен' },
+              [Op.not]: { status: ['черновик', 'удален'] },
               [Op.and]: [
                 sequelize.where(
                   sequelize.fn('date', sequelize.col('createdAt')),
@@ -50,8 +52,10 @@ export class MeetupsService {
             }
           : status && startDate && endDate
           ? {
-              status: status,
-              [Op.not]: { status: 'черновик' || 'отменен' },
+              status: {
+                [Op.in]: status,
+              },
+              [Op.not]: { status: ['черновик', 'удален'] },
               [Op.and]: [
                 sequelize.where(
                   sequelize.fn('date', sequelize.col('createdAt')),
@@ -66,8 +70,117 @@ export class MeetupsService {
               ],
             }
           : {
-              [Op.not]: { status: 'черновик' || 'отменен' },
+              [Op.not]: { status: ['черновик', 'удален'] },
             },
+      include: [
+        Speaker,
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
+      ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
+      order: [['createdAt', 'DESC']],
+    });
+
+    return meetups;
+  }
+
+  async getUserMeetups(
+    creatorID: number,
+    status?: string[],
+    startDate?: string,
+    endDate?: string,
+  ) {
+    const meetups = await this.meetupRepository.findAll({
+      where:
+        status && !(startDate && endDate)
+          ? {
+              creatorID: creatorID,
+              status: {
+                [Op.in]: status,
+              },
+            }
+          : startDate && endDate && !status
+          ? {
+              [Op.not]: { status: ['черновик', 'удален'] },
+              creatorID: creatorID,
+              [Op.and]: [
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('createdAt')),
+                  '>=',
+                  startDate,
+                ),
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('createdAt')),
+                  '<=',
+                  endDate,
+                ),
+              ],
+            }
+          : status && startDate && endDate
+          ? {
+              creatorID: creatorID,
+              status: {
+                [Op.in]: status,
+              },
+              [Op.and]: [
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('createdAt')),
+                  '>=',
+                  startDate,
+                ),
+                sequelize.where(
+                  sequelize.fn('date', sequelize.col('createdAt')),
+                  '<=',
+                  endDate,
+                ),
+              ],
+            }
+          : {
+              [Op.not]: { status: 'черновик' || 'удален' },
+              creatorID: creatorID,
+            },
+      include: [
+        Speaker,
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
+      ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
+      },
+      order: [['createdAt', 'DESC']],
+    });
+
+    return meetups;
+  }
+
+  async getById(id: number, userID?: number) {
+    const meetup = await this.meetupRepository.findOne({
+      where: userID
+        ? {
+            id: id,
+            creatorID: userID,
+          }
+        : {
+            id: id,
+          },
       include: [
         Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
@@ -86,38 +199,9 @@ export class MeetupsService {
       },
     });
 
-    return meetups;
-  }
+    if (!meetup)
+      throw new HttpException('Митап не найден', HttpStatus.NOT_FOUND);
 
-  async getById(id: number) {
-    const meetup = await this.meetupRepository.findOne({
-      where: {
-        id: id,
-      },
-      include: [
-        {
-          model: Speaker,
-          through: {
-            attributes: [],
-          },
-        },
-        { model: User, as: 'creatorInfo', attributes: [] },
-        {
-          model: User,
-          as: 'moderatorInfo',
-          attributes: [],
-        },
-      ],
-      attributes: {
-        include: [
-          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
-          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
-        ],
-        exclude: ['creatorID', 'moderatorID'],
-      },
-    });
-
-    if (!meetup) return 'Митап не найден';
     return meetup;
   }
 
@@ -131,6 +215,12 @@ export class MeetupsService {
         },
       },
     );
+
+    if (result[0] === 0)
+      throw new HttpException(
+        'Ошибка обновления информации',
+        HttpStatus.BAD_REQUEST,
+      );
 
     const currentMeetup = await this.meetupRepository.findAll({
       where: {
@@ -155,6 +245,9 @@ export class MeetupsService {
       },
     });
 
+    if (!currentMeetup)
+      throw new HttpException('Черновик не найден', HttpStatus.NOT_FOUND);
+
     //return result[0] === 1 ? `Информация о митапе с id=${id} изменена` : `Не удалось изменить информацию о митапе с id=${id}`;
 
     return currentMeetup[0];
@@ -175,28 +268,26 @@ export class MeetupsService {
     });
 
     let condition = meetupsSpeakers.every((record) => {
-      if (
-        !record.startsAt ||
-        !record.endsAt ||
-        !record.reportTheme ||
-        !record.reportDescription
-      )
+      if (!record.startsAt || !record.endsAt || !record.reportTheme)
         return false;
 
       return true;
     });
 
-    if (!currentMeetup) return 'Черновик не найден';
+    if (!currentMeetup)
+      throw new HttpException('Черновик не найден', HttpStatus.NOT_FOUND);
 
-    if (
-      !currentMeetup.title ||
-      !currentMeetup.date ||
-      !currentMeetup.description ||
-      !currentMeetup.preview
-    )
-      return 'Заполните все поля заявки на митап прежде чем формировать ее';
+    if (!currentMeetup.title || !currentMeetup.date)
+      throw new HttpException(
+        'Заполните все поля заявки на митап прежде чем формировать ее',
+        HttpStatus.FORBIDDEN,
+      );
 
-    if (!condition) return 'Заполните все поля спикера';
+    if (!condition)
+      throw new HttpException(
+        'Заполните все поля спикера',
+        HttpStatus.FORBIDDEN,
+      );
 
     const meetup = await this.meetupRepository.update(
       {
@@ -210,19 +301,18 @@ export class MeetupsService {
       },
     );
 
-    if (!meetup) return 'Не удалось сформировать заявку';
+    if (!meetup)
+      throw new HttpException(
+        'Не удалось сформировать заявку',
+        HttpStatus.BAD_REQUEST,
+      );
 
     return this.meetupRepository.findOne({
       where: {
         id: currentMeetup.id,
       },
       include: [
-        {
-          model: Speaker,
-          through: {
-            attributes: [],
-          },
-        },
+        Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
         {
           model: User,
@@ -240,6 +330,28 @@ export class MeetupsService {
     });
   }
 
+  async deleteMeetupByCreator(userID: number) {
+    const meetup = await this.meetupRepository.update(
+      {
+        status: 'удален',
+      },
+      {
+        where: {
+          creatorID: userID,
+          status: 'черновик',
+        },
+      },
+    );
+
+    if (!meetup)
+      throw new HttpException(
+        'Не удалось удалить заявку',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    return meetup;
+  }
+
   async completeMeetupByModerator(
     id: number,
     userID: number,
@@ -251,19 +363,32 @@ export class MeetupsService {
       },
     });
 
-    if (!currentMeetup) return 'Заявка на митап не найдена';
+    if (!currentMeetup)
+      throw new HttpException(
+        'Заявка на митап не найдена',
+        HttpStatus.NOT_FOUND,
+      );
 
     if (
-      currentMeetup.status === 'завершен' ||
+      currentMeetup.status === 'утвержден' ||
       currentMeetup.status === 'отклонен'
     )
-      return 'Заявка уже обработана модератором';
+      throw new HttpException(
+        'Заявка уже обработана модератором',
+        HttpStatus.FORBIDDEN,
+      );
 
     if (currentMeetup.status !== 'сформирован')
-      return 'Заявка еще не сформирована создателем';
+      throw new HttpException(
+        'Заявка еще не сформирована создателем',
+        HttpStatus.FORBIDDEN,
+      );
 
-    if (decision !== 'завершен' && decision !== 'отклонен') {
-      return 'Невозможно указать введенный статус';
+    if (decision !== 'утвержден' && decision !== 'отклонен') {
+      throw new HttpException(
+        'Невозможно указать введенный статус',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const meetup = await this.meetupRepository.update(
@@ -284,12 +409,7 @@ export class MeetupsService {
         id: id,
       },
       include: [
-        {
-          model: Speaker,
-          through: {
-            attributes: [],
-          },
-        },
+        Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
         {
           model: User,
@@ -315,19 +435,14 @@ export class MeetupsService {
     });
 
     if (result === 0)
-      return `Не удалось удалить митап с id=${id} / митап с id=${id} не найден`;
+      throw new HttpException('Митап не найден', HttpStatus.NOT_FOUND);
 
     return this.meetupRepository.findAll({
       where: {
-        [Op.not]: { status: 'черновик' || 'отменен' },
+        [Op.not]: { status: 'черновик' || 'отклонен' },
       },
       include: [
-        {
-          model: Speaker,
-          through: {
-            attributes: [],
-          },
-        },
+        Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
         {
           model: User,
@@ -345,6 +460,15 @@ export class MeetupsService {
     });
   }
 
+  async getDraft(userID: number) {
+    return await this.meetupRepository.findOne({
+      where: {
+        creatorID: userID,
+        status: 'черновик',
+      },
+    });
+  }
+
   async deleteSpeakerFromMeetup(id: number, userID: number) {
     const meetup = await this.meetupRepository.findOne({
       where: {
@@ -353,7 +477,8 @@ export class MeetupsService {
       },
     });
 
-    if (!meetup) return 'Черновик не найден';
+    if (!meetup)
+      throw new HttpException('Черновик не найден', HttpStatus.NOT_FOUND);
 
     const result = await this.meetupsSpeakersRepository.destroy({
       where: {
@@ -362,19 +487,19 @@ export class MeetupsService {
       },
     });
 
-    if (result === 0) return 'Не удалось удалить спикера из заявки на митап';
+    if (result === 0)
+      throw new HttpException(
+        'Не удалось удалить спикера из заявки на митап',
+        HttpStatus.BAD_REQUEST,
+      );
+
     const resultMeetup = await this.meetupRepository.findAll({
       where: {
         creatorID: userID,
         status: 'черновик',
       },
       include: [
-        {
-          model: Speaker,
-          through: {
-            attributes: [],
-          },
-        },
+        Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
         {
           model: User,
@@ -401,7 +526,8 @@ export class MeetupsService {
       },
     });
 
-    if (!meetup) return 'Черновик не найден';
+    if (!meetup)
+      throw new HttpException('Черновик не найден', HttpStatus.NOT_FOUND);
 
     const currentRecord = await this.meetupsSpeakersRepository.findOne({
       where: {
@@ -410,7 +536,11 @@ export class MeetupsService {
       },
     });
 
-    if (!currentRecord) return 'Указанный спикер не добавлен в заявку';
+    if (!currentRecord)
+      throw new HttpException(
+        'Указанный спикер не добавлен в заявку',
+        HttpStatus.NOT_FOUND,
+      );
 
     const result = await this.meetupsSpeakersRepository.update(dto, {
       where: {
@@ -419,9 +549,25 @@ export class MeetupsService {
       },
     });
 
-    return this.meetupsSpeakersRepository.findAll({
+    return this.meetupRepository.findOne({
       where: {
-        meetupId: meetup.id,
+        id: meetup.id,
+      },
+      include: [
+        Speaker,
+        { model: User, as: 'creatorInfo', attributes: [] },
+        {
+          model: User,
+          as: 'moderatorInfo',
+          attributes: [],
+        },
+      ],
+      attributes: {
+        include: [
+          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+        ],
+        exclude: ['creatorID', 'moderatorID'],
       },
     });
   }

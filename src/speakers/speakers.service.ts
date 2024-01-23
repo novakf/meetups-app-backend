@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Speaker } from './speakers.model';
 import { CreateSpeakerDto } from './dto/create-speaker.dto';
@@ -43,7 +43,7 @@ export class SpeakersService {
     });
   }
 
-  async getByOrganization(userID: number, org?: string) {
+  async getByOrganization(userID?: number, org?: string) {
     const speakers = await this.speakerRepository.findAll({
       where: org
         ? {
@@ -60,29 +60,32 @@ export class SpeakersService {
       attributes: { exclude: ['userID'] },
     });
 
-    const meetup = await this.meetupRepository.findOne({
-      where: {
-        creatorID: userID,
-        status: 'черновик',
-      },
-      include: [
-        { model: User, as: 'creatorInfo', attributes: [] },
-        {
-          model: User,
-          as: 'moderatorInfo',
-          attributes: [],
+    const meetup =
+      userID &&
+      (await this.meetupRepository.findAll({
+        where: {
+          creatorID: userID,
+          status: 'черновик',
         },
-      ],
-      attributes: {
         include: [
-          [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
-          [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+          Speaker,
+          { model: User, as: 'creatorInfo', attributes: [] },
+          {
+            model: User,
+            as: 'moderatorInfo',
+            attributes: [],
+          },
         ],
-        exclude: ['creatorID', 'moderatorID'],
-      },
-    });
+        attributes: {
+          include: [
+            [Sequelize.literal('"creatorInfo"."email"'), 'creatorLogin'],
+            [Sequelize.literal('"moderatorInfo"."email"'), 'moderatorLogin'],
+          ],
+          exclude: ['creatorID', 'moderatorID'],
+        },
+      }));
 
-    return { meetup, speakers };
+    return { meetup: meetup ? meetup[0] : null, speakers };
   }
 
   async getById(id: number) {
@@ -103,7 +106,8 @@ export class SpeakersService {
     });
 
     if (result === 0)
-      return `Не удалось удалить спикера с id=${id} / спикер с id=${id} не найден`;
+      throw new HttpException('Спикер не найден', HttpStatus.NOT_FOUND);
+    //return `Не удалось удалить спикера с id=${id} / спикер с id=${id} не найден`;
 
     return this.getByOrganization(userID);
   }
@@ -129,7 +133,11 @@ export class SpeakersService {
       },
     });
 
-    if (currentRecord) return 'Спикер уже добавлен в заявку';
+    if (currentRecord)
+      throw new HttpException(
+        'Спикер уже добавлен в заявку',
+        HttpStatus.BAD_REQUEST,
+      );
 
     await this.meetupsSpeakersRepository.create({
       meetupId: meetup.id,
@@ -141,12 +149,7 @@ export class SpeakersService {
         id: meetup.id,
       },
       include: [
-        {
-          model: Speaker,
-          through: {
-            attributes: [],
-          },
-        },
+        Speaker,
         { model: User, as: 'creatorInfo', attributes: [] },
         {
           model: User,
@@ -166,16 +169,31 @@ export class SpeakersService {
     return resultMeetup;
   }
 
-  async updateSpeaker(id: number, dto: CreateSpeakerDto) {
+  async updateSpeaker(
+    userID: number,
+    id: number,
+    dto: CreateSpeakerDto,
+    fileName?: string,
+  ) {
     const result = await this.speakerRepository.update(dto, {
       where: {
         id: id,
       },
     });
 
-    return result[0] === 1
-      ? `Информация о спикере с id=${id} изменена`
-      : `Не удалось изменить информацию о спикере с id=${id}`;
+    if (fileName)
+      await this.speakerRepository.update(
+        {
+          avatarImg: `http://localhost:9000/meetups-app/speakers/${id}/${fileName}`,
+        },
+        {
+          where: {
+            id: id,
+          },
+        },
+      );
+
+    return this.getById(id);
   }
 
   async changeStatus(id: number) {

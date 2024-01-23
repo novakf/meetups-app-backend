@@ -23,10 +23,10 @@ export class MeetupsSpeakers extends Model<MeetupsSpeakers> {
   @Column({ type: DataType.INTEGER, primaryKey: true })
   speakerId: number;
 
-  @Column({ type: DataType.DATE, allowNull: true })
+  @Column({ type: DataType.TIME, allowNull: true })
   startsAt: string;
 
-  @Column({ type: DataType.DATE, allowNull: true })
+  @Column({ type: DataType.TIME, allowNull: true })
   endsAt: string;
 
   @Column({ type: DataType.STRING, allowNull: true })
