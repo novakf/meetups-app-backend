@@ -25,6 +25,10 @@ export class MeetupsService {
   }
 
   async getAllMeetups(status?: string[], startDate?: string, endDate?: string) {
+    if (status && !Array.isArray(status)) {
+      status = [status];
+    }
+
     const meetups = await this.meetupRepository.findAll({
       where:
         status && !(startDate && endDate)
